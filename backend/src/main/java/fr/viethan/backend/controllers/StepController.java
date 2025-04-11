@@ -23,12 +23,12 @@ public class StepController {
 
     @GetMapping
     public List<StepDTO> getAllSteps() {
-        return stepService.getAllSteps();
+        return null;
     }
 
     @GetMapping("/{id}")
     public StepDTO getStepById(@PathVariable Long id) {
-        return stepService.getStepById(id);
+        return null;
     }
 
 }

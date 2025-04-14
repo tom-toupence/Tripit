@@ -2,27 +2,45 @@
 
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect} from "react";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 
 const NavLinks = () => {
     const pathname = usePathname();
+    const [isMounted, setIsMounted] = useState(false);
+
+    useEffect(() => {
+       setIsMounted(true);
+     }, []);
+
+  if (!isMounted) return null;
 
     return (
         <>
             {["/", "/about", "/trip"].map((path) => (
                 <Link 
-                    key={path}
-                    href={path}
-                    className={`relative group px-4 py-2 transition-colors ${pathname === path ? "text-blue-500" : "hover:text-blue-400"}`}
-                >
-                    {path === "/" ? "Home" : path.substring(1).charAt(0).toUpperCase() + path.substring(2)}
-
-                    <span className="absolute left-0 bottom-0 w-full h-0.5 bg-blue-500 scale-x-0 transition-transform duration-300 ease-in-out group-hover:scale-x-100"
-                    style={{ transformOrigin: "center" }} ></span>
-
-                </Link>
+                key={path}
+                href={path}
+                className={`relative group px-4 py-2 font-semibold ${
+                    pathname === path 
+                        ? "text-green-600"
+                        : "hover:text-green-600 transition-colors"
+                }`}
+            >
+                {path === "/" ? "Home" : path.substring(1).charAt(0).toUpperCase() + path.substring(2)}
+            
+                <span 
+                    className={`absolute left-0 bottom-0 w-full h-0.5 bg-green-600 ${
+                        pathname === path
+                            ? "scale-x-100"
+                            : "scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-in-out"
+                    }`}
+                    style={{ transformOrigin: "center" }}
+                ></span>
+            </Link>
+            
+            
             ))}
         </>
     );

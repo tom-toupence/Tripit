@@ -2,12 +2,19 @@
 
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect} from "react";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 
 const NavLinks = () => {
     const pathname = usePathname();
+    const [isMounted, setIsMounted] = useState(false);
+
+    useEffect(() => {
+       setIsMounted(true);
+     }, []);
+
+  if (!isMounted) return null;
 
     return (
         <>

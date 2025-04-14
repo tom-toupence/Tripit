@@ -2,26 +2,33 @@
 
 import { Listbox } from '@headlessui/react';
 import { CheckIcon, ChevronDownIcon } from '@heroicons/react/20/solid';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
 
 // Définir un type pour les voyages
 type Trip = {
   id: number;
-  name: string;
+  country: string;
 };
-
-const trips: Trip[] = [
-  { id: 1, name: 'Vietnam' },
-  { id: 2, name: 'Corée' },
-  { id: 3, name: 'Chine' },
-  { id: 4, name: 'Japon' },
-];
 
 export default function TripBox() {
   const [selectedTrip, setSelectedTrip] = useState<Trip | null>(null);
+  const [trips, setTrips] = useState<Trip[]>([]);
+
   
+  useEffect(() => {
+    fetch('http://localhost:8081/api/trips')
+      .then(res => res.json())
+      .then((data: unknown) => {
+        const tripsData = data as Trip[];
+        const uniqueCountries: Trip[] = Array.from(
+          new Map(tripsData.map((trip: Trip) => [trip.country, trip])).values()
+        );
+        setTrips(uniqueCountries);
+      })
+      .catch(err => console.error("Erreur lors du chargement des pays :", err));
+  }, []);
 
   return (
     <div className="absolute top-4 left-4 z-10 w-48 text-sm">
@@ -34,7 +41,7 @@ export default function TripBox() {
             <span className={clsx(
                 !selectedTrip && 'italic text-gray-400'
             )}>
-                {selectedTrip ? selectedTrip.name : 'Sélectionner un pays'}
+                {selectedTrip ? selectedTrip.country : 'Sélectionner un pays'}
             </span>
             <ChevronDownIcon className="w-4 h-4 text-green-500 ml-2" />
             </Listbox.Button>
@@ -59,7 +66,7 @@ export default function TripBox() {
                               selected && 'font-semibold'
                             )}
                           >
-                            {trip.name}
+                            {trip.country}
                             {selected && (
                               <CheckIcon className="w-4 h-4 text-green-500" />
                             )}

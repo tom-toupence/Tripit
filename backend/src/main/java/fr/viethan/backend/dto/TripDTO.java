@@ -13,7 +13,6 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class TripDTO {
     private Long id;
-    private String name;
     private String country;
     private List<StepDTO> steps;
 
@@ -21,7 +20,6 @@ public class TripDTO {
     public static TripDTO fromEntity(TripEntity trip) {
         return new TripDTO(
                 trip.getId(),
-                trip.getName(),
                 trip.getCountry(),
                 trip.getSteps() != null
                         ? trip.getSteps().stream().map(StepDTO::fromEntity).collect(Collectors.toList())
@@ -33,7 +31,6 @@ public class TripDTO {
     public TripEntity toEntity() {
         TripEntity trip = new TripEntity();
         trip.setId(this.id);
-        trip.setName(this.name);
         trip.setCountry(this.country);
         return trip; // Les étapes seront gérées à part
     }

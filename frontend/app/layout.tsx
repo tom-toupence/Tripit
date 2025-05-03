@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import Header from "./components/Header";
 import Footer from "./components/Footer"; 
 import SessionWrapper from "./sessionWrapper";
+import MapLayout from "./mapLayout";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -30,7 +31,9 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen`}>
         <SessionWrapper> {}
           <Header />
+          <MapLayout>
           <main className="flex-grow">{children}</main> 
+          </MapLayout>
           <Footer />
         </SessionWrapper>
       </body>

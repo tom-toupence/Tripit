@@ -62,7 +62,7 @@ const LoginPage = () => {
 
             <div className="mt-4 text-sm font-display font-semibold text-gray-700 text-center">
               Don&#39;t have an account?{}
-              <a className="cursor-pointer text-green-600 hover:text-green-800">Sign up</a>
+              <a className="cursor-pointer text-green-600 hover:text-green-800"> Sign up</a>
             </div>
           </div>
         </div>

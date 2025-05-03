@@ -11,7 +11,7 @@ export default function AuthButton({ className }: { className?: string }) {
   const router = useRouter();
 
   if (status === 'loading') {
-    return <span className="loading loading-infinity text-success loading-xl"></span>;
+    return <span className="loading loading-infinity loading-xl"></span>;
   }
 
   return (

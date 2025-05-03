@@ -1,6 +1,6 @@
 'use client';
 
-import { GoogleMap, LoadScript, Polyline } from '@react-google-maps/api';
+import { GoogleMap, Polyline } from '@react-google-maps/api';
 import { useRef, useEffect, useState } from 'react';
 
 const containerStyle = {
@@ -24,7 +24,7 @@ type Step = {
 export default function Map() {
   const mapRef = useRef<google.maps.Map | null>(null);
   const [markers, setMarkers] = useState<google.maps.Marker[]>([]);
-  const [pathCoordinates, setPathCoordinates] = useState<{ lat: number, lng: number }[]>([]);
+  const [pathCoordinates, setPathCoordinates] = useState<{ lat: number; lng: number }[]>([]);
 
   const onLoad = (map: google.maps.Map) => {
     mapRef.current = map;
@@ -41,7 +41,6 @@ export default function Map() {
 
     const deltaLat = (step.latitude - currentLat) / animationFrames;
     const deltaLng = (step.longitude - currentLng) / animationFrames;
-    map.setZoom(7);
 
     let frame = 0;
 
@@ -82,11 +81,10 @@ export default function Map() {
 
         setMarkers([marker]);
 
-        setPathCoordinates(prev => [...prev, { lat: step.latitude, lng: step.longitude }]);
-    
+        setPathCoordinates((prev) => [...prev, { lat: step.latitude, lng: step.longitude }]);
 
         animateToLocation(step);
-      } 
+      }
     };
 
     window.addEventListener('focusOnStep', handleFocus);
@@ -101,49 +99,36 @@ export default function Map() {
   }, [markers]);
 
   return (
-    <LoadScript googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!}>
-      <GoogleMap
-        mapContainerStyle={containerStyle}
-        center={center}
-        zoom={6}
-        onLoad={onLoad}
+    <GoogleMap
+      mapContainerStyle={containerStyle}
+      center={center}
+      zoom={6}
+      onLoad={onLoad}
+      options={{
+        gestureHandling: 'greedy',
+        zoomControl: false,
+        streetViewControl: false,
+        fullscreenControl: false,
+        mapTypeControl: false,
+        rotateControl: false,
+        scaleControl: false,
+        disableDefaultUI: true,
+        panControl: false,
+        keyboardShortcuts: false,
+      }}
+    >
+      <Polyline
+        path={pathCoordinates}
         options={{
-          gestureHandling: 'greedy',
-          zoomControl: false,
-          streetViewControl: false,
-          fullscreenControl: false,
-          mapTypeControl: false,
-          rotateControl: false,
-          scaleControl: false,
-          disableDefaultUI: true,
-          panControl: false,
-          keyboardShortcuts: false,
+          strokeColor: '#FF0000',
+          strokeOpacity: 0.8,
+          strokeWeight: 2,
+          geodesic: true,
+          clickable: false,
+          draggable: false,
+          editable: false,
         }}
-      >
-        {}
-        <Polyline
-          path={pathCoordinates}
-          options={{
-            strokeColor: '#FF0000',
-            strokeOpacity: 0.8,
-            strokeWeight: 2,
-            geodesic: true,
-            clickable: false,
-            draggable: false,
-            editable: false,
-            icons: [{
-              icon: {
-                path: 'M 0,-1 0,1',
-                strokeOpacity: 1,
-                scale: 4,
-              },
-              offset: '0',
-              repeat: '20px',
-            }],
-          }}
-        />
-        {}
-      </GoogleMap>
-    </LoadScript>
+      />
+    </GoogleMap>
   );
 }

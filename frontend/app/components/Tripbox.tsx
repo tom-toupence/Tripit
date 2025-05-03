@@ -6,11 +6,13 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
 
-// Définir un type pour les voyages
+
 type Trip = {
   id: number;
   country: string;
 };
+
+
 
 export default function TripBox() {
   const [selectedTrip, setSelectedTrip] = useState<Trip | null>(null);
@@ -29,6 +31,12 @@ export default function TripBox() {
       })
       .catch(err => console.error("Erreur lors du chargement des pays :", err));
   }, []);
+
+  useEffect(() => {
+    if (selectedTrip) {
+      showMarkers(selectedTrip);
+    }
+  }, [selectedTrip]);
 
   return (
     <div className="absolute top-4 left-4 z-10 w-48 text-sm">
@@ -83,4 +91,26 @@ export default function TripBox() {
       </Listbox>
     </div>
   );
+
+  function showMarkers(trip: Trip) {
+    const event = new CustomEvent('showMarkers', { detail: trip });
+    const jsonStep = fetch(`http://localhost:8081/api/trips/${trip.id}`)
+      .then(res => res.json())
+      .then((data: any) => {
+        const steps = data.steps;
+        if (!steps || steps.length === 0) {
+          console.warn("Aucune étape trouvée pour ce voyage.");
+        }
+        const firstStep = steps[0];
+        const eventFocus = new CustomEvent('focusOnStep', { detail: firstStep });
+        window.dispatchEvent(eventFocus);
+
+        const eventSteps = new CustomEvent('setSteps', { detail: steps });
+        window.dispatchEvent(eventSteps);
+
+      })
+      .catch(err => console.error("Erreur lors du chargement des étapes :", err));
+    
+    window.dispatchEvent(event);
+  }
 }

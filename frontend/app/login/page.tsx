@@ -1,24 +1,10 @@
 'use client';
 
-import React, { useEffect } from 'react';
-import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import React from 'react';
 import { signIn } from 'next-auth/react';
+import Image from 'next/image';
 
 const LoginPage = () => {
-  const { data: session, status } = useSession();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (status === 'authenticated') {
-      router.push('/'); 
-    }
-  }, [status, router]);
-
-  if (status === 'loading' || status === 'authenticated') {
-    return null; 
-  }
-
   return (
     <div className="lg:flex">
       <div className="lg:w-1/2">
@@ -75,7 +61,7 @@ const LoginPage = () => {
             </form>
 
             <div className="mt-4 text-sm font-display font-semibold text-gray-700 text-center">
-              Don't have an account?{" "}
+              Don&#39;t have an account?{}
               <a className="cursor-pointer text-green-600 hover:text-green-800">Sign up</a>
             </div>
           </div>

@@ -12,7 +12,11 @@ type Trip = {
   country: string;
 };
 
-
+type Step = {
+  id: number;
+  name: string;
+  // Add other properties of Step as needed
+};
 
 export default function TripBox() {
   const [selectedTrip, setSelectedTrip] = useState<Trip | null>(null);
@@ -94,9 +98,9 @@ export default function TripBox() {
 
   function showMarkers(trip: Trip) {
     const event = new CustomEvent('showMarkers', { detail: trip });
-    const jsonStep = fetch(`http://localhost:8081/api/trips/${trip.id}`)
+    fetch(`http://localhost:8081/api/trips/${trip.id}`)
       .then(res => res.json())
-      .then((data: any) => {
+      .then((data: { steps: Step[] }) => {
         const steps = data.steps;
         if (!steps || steps.length === 0) {
           console.warn("Aucune étape trouvée pour ce voyage.");
@@ -107,7 +111,6 @@ export default function TripBox() {
 
         const eventSteps = new CustomEvent('setSteps', { detail: steps });
         window.dispatchEvent(eventSteps);
-
       })
       .catch(err => console.error("Erreur lors du chargement des étapes :", err));
     

@@ -24,67 +24,41 @@ type Step = {
 export default function Map() {
   const mapRef = useRef<google.maps.Map | null>(null);
   const [markers, setMarkers] = useState<google.maps.Marker[]>([]);
-  const [pathCoordinates, setPathCoordinates] = useState<{ lat: number, lng: number }[]>([]); // <<< NOUVEAU
+  const [pathCoordinates, setPathCoordinates] = useState<{ lat: number, lng: number }[]>([]);
 
   const onLoad = (map: google.maps.Map) => {
     mapRef.current = map;
   };
 
-  	
   const animateToLocation = (step: Step) => {
     if (!mapRef.current) return;
-  
+
     const map = mapRef.current;
-    const intermediateZoom = 5; 
-    const finalZoom = 9; 
-    const animationFrames = 60; 
-  
+    const animationFrames = 60; // Number of animation frames
     const currentCenter = map.getCenter();
     const currentLat = currentCenter?.lat() ?? 0;
     const currentLng = currentCenter?.lng() ?? 0;
-  
+
     const deltaLat = (step.latitude - currentLat) / animationFrames;
     const deltaLng = (step.longitude - currentLng) / animationFrames;
-  
-    let frame = 0;
-  
-    // On commence par dézoomer vite
-    smoothZoom(map, intermediateZoom, () => {
-      const moveInterval = setInterval(() => {
-        frame++;
-  
-        const nextLat = currentLat + deltaLat * frame;
-        const nextLng = currentLng + deltaLng * frame;
-  
-        map.panTo({ lat: nextLat, lng: nextLng });
-  
-        if (frame >= animationFrames) {
-          clearInterval(moveInterval);
-  
-          smoothZoom(map, finalZoom);
-        }
-      }, 16);
-    });
-  };
-    
-  
-  // Fonction qui fait un zoom progressif
-  const smoothZoom = (map: google.maps.Map, targetZoom: number, callback?: () => void) => {
-    let currentZoom = map.getZoom() ?? 6;
-    const zoomStep = currentZoom < targetZoom ? 1 : -1;
-  
-    const zoomInterval = setInterval(() => {
-      if (currentZoom !== targetZoom) {
-        currentZoom += zoomStep;
-        map.setZoom(currentZoom);
-      } else {
-        clearInterval(zoomInterval);
-        if (callback) callback();
-      }
-    }, 20); 
-  };
+    map.setZoom(7);
 
-	
+    let frame = 0;
+
+    // Smoothly pan to the new location
+    const moveInterval = setInterval(() => {
+      frame++;
+
+      const nextLat = currentLat + deltaLat * frame;
+      const nextLng = currentLng + deltaLng * frame;
+
+      map.panTo({ lat: nextLat, lng: nextLng });
+
+      if (frame >= animationFrames) {
+        clearInterval(moveInterval);
+      }
+    }, 16); // ~60 FPS
+  };
 
   useEffect(() => {
     const handleFocus = (e: Event) => {
@@ -121,6 +95,10 @@ export default function Map() {
       window.removeEventListener('focusOnStep', handleFocus);
     };
   }, []);
+
+  useEffect(() => {
+    console.log('Markers updated:', markers);
+  }, [markers]);
 
   return (
     <LoadScript googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!}>

@@ -5,6 +5,7 @@ import { Menu, X } from "lucide-react";
 import { useState, useEffect} from "react";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
+import AuthButton from "./AuthButton";
 
 const NavLinks = () => {
     const pathname = usePathname();
@@ -58,6 +59,7 @@ const Nav = () => {
             <nav className="w-1/3 flex justify-end">
                 <div className="hidden md:flex w-full justify-between">
                     <NavLinks />
+                    <AuthButton />
                 </div>
                 <div className="md:hidden">
                     <button onClick={toggleNavbar} className="p-2">
@@ -73,6 +75,7 @@ const Nav = () => {
                     className="flex flex-col items-center basis-full text-white py-4"
                 >
                     <NavLinks />
+                    <AuthButton className="mt-6" />
                 </motion.div>
             )}
         </>

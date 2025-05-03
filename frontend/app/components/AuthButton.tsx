@@ -6,12 +6,12 @@ import { useSession, signOut } from 'next-auth/react';
 import { ChakraProvider } from '@chakra-ui/react';
 import { useRouter } from 'next/navigation';
 
-export default function AuthButton() {
+export default function AuthButton({ className }: { className?: string }) {
   const { data: session, status } = useSession();
   const router = useRouter();
 
   if (status === 'loading') {
-    return <span className="loading loading-spinner loading-lg"></span>;
+    return <span className="loading loading-infinity text-success loading-xl"></span>;
   }
 
   return (
@@ -31,7 +31,8 @@ export default function AuthButton() {
         ) : (
           <Button
             colorScheme="green"
-            onClick={() => router.push('/login')} 
+            className={className} 
+            onClick={() => router.push('/login')}
           >
             Log In
           </Button>

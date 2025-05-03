@@ -1,7 +1,8 @@
 'use client';
-
 import dynamic from 'next/dynamic';
 import TripBox from './components/Tripbox';
+import NavButton from './components/NavButton';
+
 
 const Map = dynamic(() => import('./components/Map'), {
   ssr: false,
@@ -13,6 +14,7 @@ export default function Home() {
       <div className="relative w-full h-full flex-1">
         <TripBox />
         <Map />
+        <NavButton />
       </div>
     </main>
   );

@@ -4,13 +4,14 @@ import { getToken } from 'next-auth/jwt';
 export async function middleware(req: NextRequest) {
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
 
-  if (token && req.nextUrl.pathname === '/login') {
+  // Si l'utilisateur est déjà connecté
+  if (token && (req.nextUrl.pathname === '/login' || req.nextUrl.pathname === '/register')) {
     return NextResponse.redirect(new URL('/', req.url));
   }
 
-  return NextResponse.next(); 
+  return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/login'], 
+  matcher: ['/login', '/register'], // Middleware actif sur ces pages
 };

@@ -2,9 +2,11 @@
 
 import React from 'react';
 import { signIn } from 'next-auth/react';
-import Image from 'next/image';
+import { useRouter } from 'next/navigation'; // Import useRouter
 
 const LoginPage = () => {
+  const router = useRouter();
+
   return (
     <div className="lg:flex">
       <div className="lg:w-1/2">
@@ -61,8 +63,13 @@ const LoginPage = () => {
             </form>
 
             <div className="mt-4 text-sm font-display font-semibold text-gray-700 text-center">
-              Don&#39;t have an account?{}
-              <a className="cursor-pointer text-green-600 hover:text-green-800"> Sign up</a>
+              Don&#39;t have an account?{' '}
+              <a
+                className="cursor-pointer text-green-600 hover:text-green-800"
+                onClick={() => router.push('/register')} // Navigate to /register
+              >
+                Sign up
+              </a>
             </div>
           </div>
         </div>

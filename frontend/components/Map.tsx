@@ -42,6 +42,8 @@ export default function Map() {
     const deltaLat = (step.latitude - currentLat) / animationFrames;
     const deltaLng = (step.longitude - currentLng) / animationFrames;
 
+    map.setZoom(7); 
+
     let frame = 0;
 
     // Smoothly pan to the new location

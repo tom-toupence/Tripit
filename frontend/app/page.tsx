@@ -1,10 +1,10 @@
 'use client';
 import dynamic from 'next/dynamic';
-import TripBox from './components/Tripbox';
-import NavButton from './components/NavButton';
+import TripBox from '../components/Tripbox';
+import NavButton from '../components/NavButton';
 
 
-const Map = dynamic(() => import('./components/Map'), {
+const Map = dynamic(() => import('../components/Map'), {
   ssr: false,
 }); 
 

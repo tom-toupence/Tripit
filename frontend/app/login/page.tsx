@@ -66,7 +66,7 @@ const LoginPage = () => {
               Don&#39;t have an account?{' '}
               <a
                 className="cursor-pointer text-green-600 hover:text-green-800"
-                onClick={() => router.push('/register')} // Navigate to /register
+                onClick={() => router.push('/register')} 
               >
                 Sign up
               </a>

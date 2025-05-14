@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { signIn } from 'next-auth/react';
-import { useRouter } from 'next/navigation'; // Import useRouter
+import { useRouter } from 'next/navigation'; 
 
 const LoginPage = () => {
   const router = useRouter();

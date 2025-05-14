@@ -64,6 +64,7 @@ public class AuthServiceImpl implements AuthService {
 
         // Create user
         UserEntity user = new UserEntity();
+        user.setName(request.getName());
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setRole("USER");
@@ -73,7 +74,7 @@ public class AuthServiceImpl implements AuthService {
         // Génère le token
         String token = jwtService.generateToken(user);
 
-        return new AuthResponseDTO(token, user.getRole());
+        return new AuthResponseDTO(token, user.getEmail(), user.getRole());
     }
 
 }

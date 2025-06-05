@@ -1,85 +1,80 @@
+// NavLinks.tsx
 "use client";
 
 import Link from "next/link";
-import { Menu, X } from "lucide-react";
-import { useState, useEffect} from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import AuthButton from "./AuthButton";
 
-const NavLinks = () => {
+// Palette : choisis ta vibe ici !
+// 1. Green + Blue
+const gradient = "from-green-400 via-cyan-400 to-blue-500";
+// 2. Green + Yellow
+// const gradient = "from-green-400 via-yellow-300 to-yellow-400";
+// 3. Green + Violet
+// const gradient = "from-green-400 via-purple-400 to-violet-500";
+
+const navItems = [
+    { path: "/", label: "Home" },
+    { path: "/about", label: "About" },
+    { path: "/trip", label: "Trip" },
+];
+
+const NavLinks = ({ onClick }: { onClick?: () => void }) => {
     const pathname = usePathname();
-    const [isMounted, setIsMounted] = useState(false);
-
-    useEffect(() => {
-       setIsMounted(true);
-     }, []);
-
-  if (!isMounted) return null;
+    const router = useRouter();
 
     return (
-        <>
-            {["/", "/about", "/trip"].map((path) => (
-                <Link 
-                key={path}
-                href={path}
-                className={`relative group px-4 py-2 font-semibold ${
-                    pathname === path 
-                        ? "text-green-600"
-                        : "hover:text-green-600 transition-colors"
-                }`}
-            >
-                {path === "/" ? "Home" : path.substring(1).charAt(0).toUpperCase() + path.substring(2)}
-            
-                <span 
-                    className={`absolute left-0 bottom-0 w-full h-0.5 bg-green-600 ${
-                        pathname === path
-                            ? "scale-x-100"
-                            : "scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-in-out"
-                    }`}
-                    style={{ transformOrigin: "center" }}
-                ></span>
-            </Link>
-            
-            
-            ))}
-        </>
+        <nav
+            className="
+                flex flex-col md:flex-row
+                justify-center items-center
+                md:space-x-6
+                bg-white/80 dark:bg-black/30 backdrop-blur-xl
+                rounded-2xl px-4 py-2 shadow-md ring-1 ring-black/10
+            "
+            style={{
+                WebkitBackdropFilter: 'blur(6px)',
+                backdropFilter: 'blur(6px)',
+            }}
+        >
+            {navItems.map(({ path, label }) => {
+                const isActive = pathname === path;
+                return (
+                    <button
+                        key={path}
+                        type="button"
+                        onClick={(e) => {
+                            e.preventDefault();
+                            if (onClick) onClick();
+                            if (pathname !== path) router.push(path);
+                        }}
+                        className={`
+                            relative px-4 py-2 mx-1 my-1 rounded-xl transition
+                            font-semibold group
+                            ${isActive
+                            ? "text-green-700 dark:text-green-300"
+                            : "text-gray-800 dark:text-gray-100 hover:text-green-600/90 dark:hover:text-green-400/90"
+                        }
+                            ${isActive ? "bg-green-100/80 dark:bg-green-900/40" : "hover:bg-black/10 dark:hover:bg-white/10"}
+                            focus:outline-none focus-visible:ring-2 focus-visible:ring-green-500
+                        `}
+                    >
+                        {label}
+                        {isActive && (
+                            <motion.span
+                                layoutId="active-pill"
+                                className={`
+                                    absolute inset-0 rounded-xl -z-10
+                                    bg-gradient-to-tr ${gradient} opacity-70
+                                `}
+                                transition={{ type: "spring", stiffness: 350, damping: 30 }}
+                            />
+                        )}
+                    </button>
+                );
+            })}
+        </nav>
     );
 };
 
-const Nav = () => {
-    const [isOpen, setIsOpen] = useState(false);
-
-    const toggleNavbar = () => {
-        setIsOpen(!isOpen);
-    };
-
-    return (
-        <>
-            <nav className="w-1/3 flex justify-end">
-                <div className="hidden md:flex w-full justify-between">
-                    <NavLinks />
-                    <AuthButton />
-                </div>
-                <div className="md:hidden">
-                    <button onClick={toggleNavbar} className="p-2">
-                        {isOpen ? <X /> : <Menu />}
-                    </button> 
-                </div>
-            </nav>
-            {isOpen && (
-                <motion.div 
-                    initial={{ opacity: 0, y: -10 }} 
-                    animate={{ opacity: 1, y: 0 }} 
-                    exit={{ opacity: 0, y: -10 }} 
-                    className="flex flex-col items-center basis-full text-white py-4"
-                >
-                    <NavLinks />
-                    <AuthButton className="mt-6" />
-                </motion.div>
-            )}
-        </>
-    );
-};
-
-export default Nav;
+export default NavLinks;

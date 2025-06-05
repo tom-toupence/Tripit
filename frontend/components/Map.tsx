@@ -1,6 +1,6 @@
 'use client';
 
-import { GoogleMap, Polyline } from '@react-google-maps/api';
+import {GoogleMap, LoadScript, Polyline} from '@react-google-maps/api';
 import { useRef, useEffect, useState } from 'react';
 
 const containerStyle = {
@@ -101,6 +101,7 @@ export default function Map() {
   }, [markers]);
 
   return (
+      <LoadScript googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!}>
     <GoogleMap
       mapContainerStyle={containerStyle}
       center={center}
@@ -132,5 +133,7 @@ export default function Map() {
         }}
       />
     </GoogleMap>
+      </LoadScript>
+
   );
 }

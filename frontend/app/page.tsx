@@ -1,6 +1,5 @@
 'use client';
 import dynamic from 'next/dynamic';
-import TripBox from '../components/Tripbox';
 import NavButton from '../components/NavButton';
 
 
@@ -12,9 +11,8 @@ export default function Home() {
   return (
     <main className="flex-1 h-full">
       <div className="relative w-full h-full flex-1">
-        <TripBox />
-        <Map />
-        <NavButton />
+          <Map />
+          <NavButton />
       </div>
     </main>
   );

@@ -3,6 +3,7 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import AuthButton from "../components/AuthButton";
 
 // Palette : choisis ta vibe ici !
 // 1. Green + Blue
@@ -72,6 +73,9 @@ const NavLinks = ({ onClick }: { onClick?: () => void }) => {
                     </button>
                 );
             })}
+            <div className="ml-2 flex">
+                <AuthButton />
+            </div>
         </nav>
     );
 };

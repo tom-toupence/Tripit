@@ -1,61 +1,49 @@
-'use client';
-
-import { Menu, MenuButton, MenuList, MenuItem, Button, Flex } from '@chakra-ui/react';
-import { ChevronDownIcon } from '@chakra-ui/icons';
-import { useAuth } from '@/context/AuthContext';
-import { GoogleLogin, CredentialResponse } from '@react-oauth/google';
-import { API_BASE } from '@/services/constants';
-import { ChakraProvider } from '@chakra-ui/react';
+"use client";
+import { useEffect, useState } from "react";
+import Image from "next/image";
+import { FcGoogle } from "react-icons/fc"; // Google Icon
 
 export default function AuthButton() {
-    const authContext = useAuth();
-    if (!authContext) {
-        throw new Error('useAuth must be used within an AuthProvider');
-    }
-    const { user, setUser } = authContext;
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
-    const handleSuccess = async (credentialResponse: CredentialResponse) => {
-        const { credential } = credentialResponse;
-        // Envoyer le token au backend pour vérification
-        const response = await fetch(`${API_BASE}/auth/google`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ token: credential }),
-        });
-        const data = await response.json();
-        if (data.jwt) {
-            localStorage.setItem('jwt', data.jwt);
-            setUser(data.user);
-        }
-    };
+    useEffect(() => {
+        // Appelle ton backend pour savoir si l'utilisateur est loggé
+        fetch("/api/auth/status") // à adapter selon ton endpoint
+            .then((res) => res.json())
+            .then((data) => {
+                setIsAuthenticated(data.authenticated);
+                setAvatarUrl(data.avatarUrl || null);
+            });
+    }, []);
 
-    const handleLogout = () => {
-        localStorage.removeItem('jwt');
-        setUser(null);
+    const handleGoogleLogin = () => {
+        // Redirige vers le backend Spring pour login Google
+        window.location.href = "http://localhost:8080/oauth2/authorization/google";
     };
 
     return (
-        <ChakraProvider resetCSS={false}>
-            <Flex align="center" gap={4}>
-                {user ? (
-                    <Menu>
-                        <MenuButton colorScheme="green" as={Button} rightIcon={<ChevronDownIcon />}>
-                            {user.nickname || 'Mon compte'}
-                        </MenuButton>
-                        <MenuList bg="green.600">
-                            <MenuItem bg="green.600" color="white" onClick={handleLogout}>
-                                Logout
-                            </MenuItem>
-                        </MenuList>
-                    </Menu>
-                ) : (
-                    <GoogleLogin
-                        onSuccess={handleSuccess}
-                        onError={() => console.log('Login Failed')}
-                        width="250"
-                    />
-                )}
-            </Flex>
-        </ChakraProvider>
+        <div className="flex flex-row items-center mx-1 min-h-[48px]">
+            {/* Barre verticale */}
+            <div className="w-[2px] h-10 bg-gray-300 mx-4 shadow-sm" />
+            {/* Bouton ou Avatar */}
+            {!isAuthenticated ? (
+                <button
+                    onClick={handleGoogleLogin}
+                    className="flex items-center justify-center w-10 h-10 bg-white dark:bg-black rounded-full shadow hover:scale-110 transition"
+                    title="Connexion Google"
+                >
+                    <FcGoogle className="w-7 h-7" />
+                </button>
+            ) : (
+                <Image
+                    src={avatarUrl || "/default-avatar.png"}
+                    alt="avatar"
+                    width={40}
+                    height={40}
+                    className="rounded-full border-2 border-green-400 shadow"
+                />
+            )}
+        </div>
     );
 }

@@ -2,10 +2,12 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { FcGoogle } from "react-icons/fc"; // Google Icon
+import { useRouter } from "next/navigation"; // Utilisé pour la redirection
 
 export default function AuthButton() {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+    const router = useRouter();
 
     useEffect(() => {
         // Appelle ton backend pour savoir si l'utilisateur est loggé
@@ -19,7 +21,7 @@ export default function AuthButton() {
 
     const handleGoogleLogin = () => {
         // Redirige vers le backend Spring pour login Google
-        window.location.href = "http://localhost:8080/oauth2/authorization/google";
+        router.push("/login");
     };
 
     return (

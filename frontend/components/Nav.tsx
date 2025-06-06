@@ -1,7 +1,6 @@
 // NavLinks.tsx
 "use client";
 
-import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 
@@ -16,7 +15,7 @@ const gradient = "from-green-400 via-cyan-400 to-blue-500";
 const navItems = [
     { path: "/", label: "Home" },
     { path: "/about", label: "About" },
-    { path: "/trip", label: "Trip" },
+    { path: "/contact", label: "Contact" },
 ];
 
 const NavLinks = ({ onClick }: { onClick?: () => void }) => {

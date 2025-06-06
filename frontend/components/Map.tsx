@@ -102,37 +102,37 @@ export default function Map() {
 
   return (
       <LoadScript googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!}>
-    <GoogleMap
-      mapContainerStyle={containerStyle}
-      center={center}
-      zoom={6}
-      onLoad={onLoad}
-      options={{
-        gestureHandling: 'greedy',
-        zoomControl: false,
-        streetViewControl: false,
-        fullscreenControl: false,
-        mapTypeControl: false,
-        rotateControl: false,
-        scaleControl: false,
-        disableDefaultUI: true,
-        panControl: false,
-        keyboardShortcuts: false,
-      }}
-    >
-      <Polyline
-        path={pathCoordinates}
-        options={{
-          strokeColor: '#FF0000',
-          strokeOpacity: 0.8,
-          strokeWeight: 2,
-          geodesic: true,
-          clickable: false,
-          draggable: false,
-          editable: false,
-        }}
-      />
-    </GoogleMap>
+        <GoogleMap
+          mapContainerStyle={containerStyle}
+          center={center}
+          zoom={6}
+          onLoad={onLoad}
+          options={{
+            gestureHandling: 'greedy',
+            zoomControl: false,
+            streetViewControl: false,
+            fullscreenControl: false,
+            mapTypeControl: false,
+            rotateControl: false,
+            scaleControl: false,
+            disableDefaultUI: true,
+            panControl: false,
+            keyboardShortcuts: false,
+          }}
+        >
+          <Polyline
+            path={pathCoordinates}
+            options={{
+              strokeColor: '#FF0000',
+              strokeOpacity: 0.8,
+              strokeWeight: 2,
+              geodesic: true,
+              clickable: false,
+              draggable: false,
+              editable: false,
+            }}
+          />
+        </GoogleMap>
       </LoadScript>
 
   );

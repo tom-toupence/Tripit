@@ -10,8 +10,10 @@ export default function Callback() {
         const token = params.get("token");
         if (token) {
             localStorage.setItem("jwt", token);
+            window.location.replace("/");
+        } else {
+            router.replace("/");
         }
-        router.replace("/"); // ou autre
     }, [router]);
 
     return (

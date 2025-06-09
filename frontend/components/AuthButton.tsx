@@ -36,7 +36,6 @@ export default function AuthButton() {
         router.push("/login");
     };
 
-    // BONUS : bouton de déconnexion (optionnel)
     const handleLogout = () => {
         localStorage.removeItem("jwt");
         setUser(null);

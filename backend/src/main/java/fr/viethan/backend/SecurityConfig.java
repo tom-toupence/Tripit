@@ -1,5 +1,7 @@
 package fr.viethan.backend;
 
+import fr.viethan.backend.services.CustomOAuth2SuccessHandler;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -15,6 +17,19 @@ import java.util.List;
 
 @Configuration
 public class SecurityConfig {
+
+
+    private final CustomOAuth2SuccessHandler customOAuth2SuccessHandler;
+
+    /**
+     * Constructeur de la classe SecurityConfig.
+     * @param customOAuth2SuccessHandler le gestionnaire de succès OAuth2 personnalisé
+     */
+    @Autowired
+    public SecurityConfig(CustomOAuth2SuccessHandler customOAuth2SuccessHandler) {
+        this.customOAuth2SuccessHandler = customOAuth2SuccessHandler;
+    }
+
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
@@ -35,11 +50,16 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/**").permitAll()
+                        .requestMatchers("/doc/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-resources/**").permitAll()
                         .anyRequest().authenticated()
-                );
+                )
+                .oauth2Login(oauth2 -> oauth2
+                        .successHandler(customOAuth2SuccessHandler)
+                ); // 👈
 
         return http.build();
     }
+
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {

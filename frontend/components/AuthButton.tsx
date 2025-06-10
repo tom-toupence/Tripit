@@ -4,10 +4,10 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { FcGoogle } from "react-icons/fc";
 import { useRouter } from "next/navigation";
-import {API_BASE} from "@/services/constants";
+import { API_BASE } from "@/services/constants";
 
 export default function AuthButton() {
-    const [user, setUser] = useState<{ email: string; avatarUrl?: string } | null>(null);
+    const [user, setUser] = useState<{ email: string; avatarUrl?: string; name?: string } | null>(null);
     const router = useRouter();
 
     useEffect(() => {
@@ -22,10 +22,9 @@ export default function AuthButton() {
             .then((res) => res.ok ? res.json() : Promise.reject())
             .then((data) => {
                 if (data.authenticated) {
-                    console.log("Réponse de /auth/status :", data);
-                    setUser({ email: data.email, avatarUrl: data.avatarUrl });
+                    setUser({ email: data.email, avatarUrl: data.avatarUrl, name : data.name });
                 } else {
-                    console.log("Utilisateur non authentifié");
+                    localStorage.removeItem("jwt");
                     setUser(null);
                 }
             })
@@ -41,6 +40,10 @@ export default function AuthButton() {
         setUser(null);
     };
 
+    const handleProfile = () => {
+        router.push("/profile");
+    };
+
     return (
         <div className="flex flex-row items-center mx-1 min-h-[48px]">
             <div className="w-[2px] h-10 bg-gray-300 mx-4 shadow-sm" />
@@ -53,23 +56,32 @@ export default function AuthButton() {
                     <FcGoogle className="w-7 h-7" />
                 </button>
             ) : (
-                <div className="relative group">
-                    <Image
-                        src={user.avatarUrl || "/default-avatar.png"}
-                        alt="avatar"
-                        width={40}
-                        height={40}
-                        className="rounded-full border-2 border-green-400 shadow"
-                    />
-                    {/* Bouton de logout au hover de l'avatar */}
-                    <button
-                        onClick={handleLogout}
-                        className="absolute top-0 right-0 w-4 h-4 bg-red-500 rounded-full text-xs text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                        title="Déconnexion"
-                        style={{ fontSize: "10px" }}
+                <div className="dropdown dropdown-end">
+                    <label tabIndex={0} className="btn btn-ghost btn-circle avatar">
+                        <div className="w-10 rounded-full border-2 border-green-400 shadow">
+                            <Image
+                                src={user.avatarUrl || "/default-avatar.png"}
+                                alt="avatar"
+                                width={40}
+                                height={40}
+                            />
+                        </div>
+                    </label>
+                    <ul
+                        tabIndex={0}
+                        className="mt-4 z-[1] shadow menu menu-sm translate-x-4 dropdown-content bg-base-100 rounded-box min-w-[120px]"
                     >
-                        ×
-                    </button>
+                        <li>
+                            <span className="font-semibold pointer-events-none select-none">{user.name}</span>
+                        </li>
+                        <li>
+                            <button onClick={handleProfile}>Mon profil</button>
+                        </li>
+                        <li>
+                            <button onClick={handleLogout}>Se déconnecter</button>
+                        </li>
+                        {/* Ajoute d'autres items ici si tu veux */}
+                    </ul>
                 </div>
             )}
         </div>

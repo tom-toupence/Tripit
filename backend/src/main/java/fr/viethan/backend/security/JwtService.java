@@ -6,6 +6,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
@@ -14,7 +15,11 @@ import java.util.Date;
 @Service
 public class JwtService {
 
-    private static final String SECRET_KEY = "JtIhQdeNlGWqWXhnKD+DqMaJzgP/HawNYQdrlUvhlKkRlpSZ1YSbIOeHKxrep8xX/DfZ/OTrdFDjJZqDsSO+ww=="; // min 256 bits
+    private final String SECRET_KEY;
+
+    public JwtService(@Value("${jwt.secret}") String secretKey) {
+        this.SECRET_KEY = secretKey;
+    }
 
     public String generateToken(UserEntity user) {
         return Jwts.builder()

@@ -1,6 +1,9 @@
 package fr.viethan.backend.controllers;
 
 import fr.viethan.backend.dto.AuthDTO;
+import fr.viethan.backend.dto.AuthResponseDTO;
+import fr.viethan.backend.dto.GoogleTokenDTO;
+import fr.viethan.backend.entities.UserEntity;
 import fr.viethan.backend.interfaces.AuthService;
 import fr.viethan.backend.security.JwtService;
 import io.jsonwebtoken.Claims;
@@ -10,49 +13,36 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+// AuthController.java
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 public class AuthController {
 
     private final AuthService authService;
-    private final JwtService jwtService;
 
-    public AuthController(AuthService authService, JwtService jwtService) {
+    public AuthController(AuthService authService) {
         this.authService = authService;
-        this.jwtService = jwtService;
     }
 
-    @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody AuthDTO registerRequest) {
+    @GetMapping("/status")
+    public ResponseEntity<?> status(@RequestHeader(value = "Authorization", required = false) String authorization) {
+        if (authorization == null || !authorization.startsWith("Bearer ")) {
+            return ResponseEntity.ok().body(Map.of("authenticated", false));
+        }
+        String token = authorization.substring("Bearer ".length());
         try {
-            return ResponseEntity.ok(authService.register(registerRequest));
+            AuthResponseDTO status = authService.getUserStatusFromToken(token);
+            return ResponseEntity.ok().body(Map.of(
+                    "authenticated", true,
+                    "email", status.getEmail(),
+                    "name", status.getName(),
+                    "avatarUrl", status.getAvatarUrl(),
+                    "role", status.getRole()
+            ));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error registering user: " + e.getMessage());
+            return ResponseEntity.ok().body(Map.of("authenticated", false));
         }
-    }
-
-    @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody AuthDTO request) {
-        try {
-            return ResponseEntity.ok(authService.authenticate(request));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials: " + e.getMessage());
-        }
-    }
-
-    @GetMapping("/test")
-    public ResponseEntity<?> test(@RequestHeader("Authorization") String authHeader) {
-        System.out.println("Authorization header: " + authHeader);
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Missing or invalid Authorization header");
-        }
-        String token = authHeader.replace("Bearer ", "");
-        Claims claims = Jwts.parserBuilder()
-                .setSigningKey(jwtService.getSignInKey())
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
-        return ResponseEntity.ok(claims);
     }
 }

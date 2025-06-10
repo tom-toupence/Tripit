@@ -4,6 +4,6 @@ import fr.viethan.backend.dto.AuthDTO;
 import fr.viethan.backend.dto.AuthResponseDTO;
 
 public interface AuthService {
-    AuthResponseDTO authenticate(AuthDTO authDTO);
-    AuthResponseDTO register(AuthDTO authDTO);
+    AuthResponseDTO handleOAuthSuccess(String email, String name, String avatarUrl);
+    AuthResponseDTO getUserStatusFromToken(String token);
 }

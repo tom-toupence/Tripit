@@ -35,7 +35,7 @@ export default function AboutPage() {
                             Une passion du voyage & de la découverte
                         </h2>
                         <p className="text-lg text-green-900/90 leading-relaxed">
-                            Depuis toujours, j’ai été attirée par l’aventure, la découverte de nouvelles cultures et la rencontre de personnes inspirantes. Voyager, pour moi, c’est bien plus que changer de décor : c’est s’ouvrir à l’inattendu, s’émerveiller devant la beauté du monde, et sortir de sa zone de confort pour mieux se découvrir soi-même. <br /><br />
+                            Depuis toujours, j’ai été attiré par l’aventure et la découverte de nouvelles cultures. Voyager, pour moi, c’est bien plus que changer de décor: c’est s’ouvrir à l’inattendu, s’émerveiller devant la beauté du monde, et sortir de sa zone de confort pour mieux se découvrir soi-même. <br /><br />
                             Ce projet est né de ce besoin de garder une trace de ces instants précieux et de partager tout ce que j’ai pu apprendre lors de mes différents périples.
                         </p>
                     </div>
@@ -63,7 +63,7 @@ export default function AboutPage() {
                             Partager mes conseils, mes galères… et donner envie
                         </h2>
                         <p className="text-lg text-green-900/90 leading-relaxed">
-                            À travers ce site, j’ai voulu faire plus qu’un simple carnet de route. J’y partage mes anecdotes, mes coups de cœur, mais aussi les galères, les imprévus qui m'est arrivé. <br /><br />
+                            À travers ce site, j’ai voulu faire plus qu’un simple carnet de route. J’y partage mes anecdotes, mes coups de cœur, mais aussi les galères, les imprévus qui me sont arrivés. <br /><br />
                             Mon objectif : donner envie de voyager à celles et ceux qui hésitent encore, transmettre quelques astuces, rassurer face à l’inconnu, et surtout : donner un aperçu sincère de la réalité du voyage, entre émerveillement et imprévus.
                             <br /><br />
                             N’hésite pas à me laisser un message sur la page <span className="font-semibold text-green-700">Contact</span>, je serai ravie d’échanger et de découvrir aussi tes propres aventures !

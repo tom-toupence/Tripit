@@ -3,6 +3,7 @@ package fr.viethan.backend.services;
 
 import fr.viethan.backend.dto.AuthResponseDTO;
 import fr.viethan.backend.entities.UserEntity;
+import fr.viethan.backend.entities.enums.Role;
 import fr.viethan.backend.repositories.UserRepository;
 import fr.viethan.backend.interfaces.AuthService;
 import fr.viethan.backend.security.JwtService;
@@ -31,7 +32,7 @@ public class AuthServiceImpl implements AuthService {
             u.setEmail(email);
             u.setName(name);
             u.setAvatarUrl(avatarUrl);
-            u.setRole("USER");
+            u.setRole(Role.USER);
             u.setPassword("");
             return userRepository.save(u);
         });
@@ -44,7 +45,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         String jwt = jwtService.generateToken(user);
-        return new AuthResponseDTO(jwt, email, name, avatarUrl, user.getRole());
+        return new AuthResponseDTO(jwt, email, name, avatarUrl, user.getRole().getRoleName());
     }
 
     @Override
@@ -57,7 +58,7 @@ public class AuthServiceImpl implements AuthService {
                 user.getEmail(),
                 user.getName(),
                 user.getAvatarUrl(),
-                user.getRole()
+                user.getRole().getRoleName()
         );
     }
 }

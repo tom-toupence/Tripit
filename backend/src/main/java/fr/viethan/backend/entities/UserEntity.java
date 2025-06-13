@@ -3,6 +3,7 @@ package fr.viethan.backend.entities;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import fr.viethan.backend.entities.enums.Role;
 
 @Entity
 @Table(name = "users")
@@ -23,5 +24,7 @@ public class UserEntity {
     private String avatarUrl;
 
     private String password;
-    private String role;
+
+    @Enumerated(EnumType.STRING)
+    private Role role;
 }

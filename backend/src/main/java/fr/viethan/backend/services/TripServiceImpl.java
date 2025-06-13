@@ -1,6 +1,7 @@
 package fr.viethan.backend.services;
 
 import fr.viethan.backend.dto.TripDTO;
+import fr.viethan.backend.dto.TripInputDTO;
 import fr.viethan.backend.entities.TripEntity;
 import fr.viethan.backend.interfaces.TripService;
 import fr.viethan.backend.repositories.TripRepository;
@@ -37,8 +38,8 @@ public class TripServiceImpl implements TripService {
 
     @Override
     @Transactional
-    public TripDTO createTrip(TripDTO tripDTO) {
-        TripEntity tripEntity = tripDTO.toEntity();
+    public TripDTO createTrip(TripInputDTO tripDTO) {
+        TripEntity tripEntity = TripInputDTO.toEntity(tripDTO);
         TripEntity savedTrip = tripRepository.save(tripEntity);
         return TripDTO.fromEntity(savedTrip);
     }

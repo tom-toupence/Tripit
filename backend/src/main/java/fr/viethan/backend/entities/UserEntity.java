@@ -20,6 +20,9 @@ public class UserEntity {
     @Column(unique = true)
     private String email;
 
+    @Column
+    private String avatarUrl;
+
     private String password;
 
     @Enumerated(EnumType.STRING)

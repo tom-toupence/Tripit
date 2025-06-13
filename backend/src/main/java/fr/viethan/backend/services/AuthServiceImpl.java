@@ -1,6 +1,6 @@
+// AuthServiceImpl.java
 package fr.viethan.backend.services;
 
-import fr.viethan.backend.dto.AuthDTO;
 import fr.viethan.backend.dto.AuthResponseDTO;
 import fr.viethan.backend.entities.UserEntity;
 import fr.viethan.backend.entities.enums.Role;
@@ -8,74 +8,57 @@ import fr.viethan.backend.repositories.UserRepository;
 import fr.viethan.backend.interfaces.AuthService;
 import fr.viethan.backend.security.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
 public class AuthServiceImpl implements AuthService {
 
-    private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
-    private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
 
     @Autowired
     public AuthServiceImpl(
-            AuthenticationManager authenticationManager,
             JwtService jwtService,
-            UserRepository userRepository,
-            PasswordEncoder passwordEncoder
+            UserRepository userRepository
     ) {
-        this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
         this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
-    public AuthResponseDTO authenticate(AuthDTO request) {
-        try {
-            authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
-            );
-        } catch (AuthenticationException e) {
-            throw new RuntimeException("Invalid credentials");
+    public AuthResponseDTO handleOAuthSuccess(String email, String name, String avatarUrl) {
+        UserEntity user = userRepository.findByEmail(email).orElseGet(() -> {
+            UserEntity u = new UserEntity();
+            u.setEmail(email);
+            u.setName(name);
+            u.setAvatarUrl(avatarUrl);
+            u.setRole(Role.USER);
+            u.setPassword("");
+            return userRepository.save(u);
+        });
+
+        // Si l'utilisateur existe mais que l'info a changé (Google mis à jour)
+        if (!name.equals(user.getName()) || !avatarUrl.equals(user.getAvatarUrl())) {
+            user.setName(name);
+            user.setAvatarUrl(avatarUrl);
+            userRepository.save(user);
         }
 
-        UserEntity user = userRepository.findByEmail(request.getEmail())
+        String jwt = jwtService.generateToken(user);
+        return new AuthResponseDTO(jwt, email, name, avatarUrl, user.getRole().getRoleName());
+    }
+
+    @Override
+    public AuthResponseDTO getUserStatusFromToken(String token) {
+        String email = jwtService.extractUsername(token);
+        UserEntity user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-
-        String token = jwtService.generateToken(user);
-
-        return new AuthResponseDTO(token, user.getRole().getRoleName());
+        return new AuthResponseDTO(
+                token,
+                user.getEmail(),
+                user.getName(),
+                user.getAvatarUrl(),
+                user.getRole().getRoleName()
+        );
     }
-
-    @Override
-    public AuthResponseDTO register(AuthDTO request) {
-        // Check if user already exists
-        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-            throw new RuntimeException("User already exists");
-        }
-
-        System.out.println("Registering user: " + request.getEmail());
-        System.out.println("Password: " + request.getPassword());
-
-        // Create user
-        UserEntity user = new UserEntity();
-        user.setName(request.getName());
-        user.setEmail(request.getEmail());
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setRole(Role.USER);
-
-        userRepository.save(user);
-
-        // Génère le token
-        String token = jwtService.generateToken(user);
-
-        return new AuthResponseDTO(token, user.getEmail(), user.getRole().getRoleName());
-    }
-
 }

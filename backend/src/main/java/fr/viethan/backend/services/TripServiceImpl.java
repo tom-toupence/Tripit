@@ -39,7 +39,7 @@ public class TripServiceImpl implements TripService {
     @Override
     @Transactional
     public TripDTO createTrip(TripInputDTO tripDTO) {
-        TripEntity tripEntity = tripDTO.toEntity(tripDTO);
+        TripEntity tripEntity = TripInputDTO.toEntity(tripDTO);
         TripEntity savedTrip = tripRepository.save(tripEntity);
         return TripDTO.fromEntity(savedTrip);
     }

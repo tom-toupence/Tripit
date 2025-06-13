@@ -1,6 +1,7 @@
 package fr.viethan.backend.controllers;
 
 import fr.viethan.backend.dto.TripDTO;
+import fr.viethan.backend.dto.TripInputDTO;
 import fr.viethan.backend.interfaces.TripService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -33,7 +34,7 @@ public class TripController {
     }
 
     @PostMapping
-    public TripDTO createTrip(@RequestBody TripDTO tripDTO) {
+    public TripDTO createTrip(@RequestBody TripInputDTO tripDTO) {
         return tripService.createTrip(tripDTO);
     }
 

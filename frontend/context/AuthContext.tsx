@@ -8,7 +8,7 @@ import {
 import { API_BASE } from '@/services/constants';
 
 type User = {
-    name: ReactNode;
+    name: string;
     email: string;
     avatarUrl?: string;
 };

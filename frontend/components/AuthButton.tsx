@@ -37,7 +37,11 @@ export default function AuthButton() {
                         }
                     }
                 })
-                .catch(() => setUser(null));
+                .catch(() => {
+                    if (setUser) {
+                        setUser(null);
+                    }
+                });
         }
     }, []);
 

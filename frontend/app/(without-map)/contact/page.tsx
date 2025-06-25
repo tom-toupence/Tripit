@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { Mail, User } from "react-feather";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { API_BASE } from "@/services/constants";
+import {AiFillApi} from "react-icons/ai";
 
 export default function Contact() {
     const { user } = useAuth() ?? {};
@@ -71,7 +73,7 @@ export default function Contact() {
         setIsSuccess(false);
         setErrorMsg("");
         try {
-            const res = await fetch("http://localhost:8081/api/contact", {
+            const res = await fetch(API_BASE + '/contact', {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(form),

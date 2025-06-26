@@ -1,47 +1,52 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import Image from "next/image";
 import { FcGoogle } from "react-icons/fc";
 import { useRouter } from "next/navigation";
 import { API_BASE } from "@/services/constants";
+import {useAuth} from "@/context/AuthContext";
+import Link from "next/link";
 
 export default function AuthButton() {
-    const [user, setUser] = useState<{ email: string; avatarUrl?: string; name?: string } | null>(null);
+    const { user, setUser } = useAuth() ?? {};
     const router = useRouter();
 
     useEffect(() => {
         const token = localStorage.getItem("jwt");
         if (!token) {
-            setUser(null);
+            if (setUser) {
+                setUser(null);
+            }
             return;
         }
-        fetch(API_BASE + "/auth/status", {
-            headers: { Authorization: `Bearer ${token}` },
-        })
-            .then((res) => res.ok ? res.json() : Promise.reject())
-            .then((data) => {
-                if (data.authenticated) {
-                    setUser({ email: data.email, avatarUrl: data.avatarUrl, name : data.name });
-                } else {
-                    localStorage.removeItem("jwt");
-                    setUser(null);
-                }
+        if (setUser) {
+            fetch(API_BASE + "/auth/status", {
+                headers: {Authorization: `Bearer ${token}`},
             })
-            .catch(() => setUser(null));
+                .then((res) => res.ok ? res.json() : Promise.reject())
+                .then((data) => {
+                    if (data.authenticated) {
+                        if (setUser) {
+                            setUser({email: data.email, avatarUrl: data.avatarUrl, name: data.name});
+                        }
+                    } else {
+                        localStorage.removeItem("jwt");
+                        if (setUser) {
+                            setUser(null);
+                        }
+                    }
+                })
+                .catch(() => {
+                    if (setUser) {
+                        setUser(null);
+                    }
+                });
+        }
     }, []);
 
     const handleGoogleLogin = () => {
         router.push("/login");
-    };
-
-    const handleLogout = () => {
-        localStorage.removeItem("jwt");
-        setUser(null);
-    };
-
-    const handleProfile = () => {
-        router.push("/profile");
     };
 
     return (
@@ -58,7 +63,7 @@ export default function AuthButton() {
             ) : (
                 <div className="dropdown dropdown-end">
                     <label tabIndex={0} className="btn btn-ghost btn-circle avatar">
-                        <div className="w-10 rounded-full border-2 border-green-400 shadow">
+                        <div className="w-10 rounded-full border-2 shadow">
                             <Image
                                 src={user.avatarUrl || "/default-avatar.png"}
                                 alt="avatar"
@@ -69,18 +74,24 @@ export default function AuthButton() {
                     </label>
                     <ul
                         tabIndex={0}
-                        className="mt-4 z-[1] shadow menu menu-sm translate-x-4 dropdown-content bg-base-100 rounded-box min-w-[120px]"
+                        className="mt-4 z-[1] shadow menu menu-sm translate-x-4 dropdown-content bg-white border border-gray-200 rounded-box min-w-[120px]"
                     >
                         <li>
                             <span className="font-semibold pointer-events-none select-none">{user.name}</span>
                         </li>
                         <li>
-                            <button onClick={handleProfile}>Mon profil</button>
+                            <Link
+                                href="/"
+                                onClick={() => {
+                                    localStorage.removeItem("jwt");
+                                    localStorage.setItem("justLoggedOut", "1");
+                                    if (setUser) setUser(null);
+                                }}
+                                className="w-full flex items-center px-4 py-2 hover:bg-gray-100 rounded"
+                            >
+                                Se déconnecter
+                            </Link>
                         </li>
-                        <li>
-                            <button onClick={handleLogout}>Se déconnecter</button>
-                        </li>
-                        {/* Ajoute d'autres items ici si tu veux */}
                     </ul>
                 </div>
             )}

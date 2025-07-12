@@ -12,7 +12,6 @@ import software.amazon.awssdk.services.s3.S3Configuration;
 import java.net.URI;
 
 @Configuration
-
 public class S3Config {
 
     @Value("${cloudflare.r2.endpoint}")

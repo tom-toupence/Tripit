@@ -10,4 +10,8 @@ public interface StepService {
     List<StepDTO> getStepsByTripId(Long tripId);
     StepDTO getStepById(Long id);
     StepDTO createStep(Long tripId, StepInputDTO stepInputDTO);
+
+    StepDTO updateStep(Long id, StepInputDTO stepInputDTO);
+
+    void deleteStep(Long id);
 }

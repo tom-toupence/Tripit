@@ -8,8 +8,9 @@ import {
 import { API_BASE } from '@/services/constants';
 
 type User = {
+    name: string;
     email: string;
-    nickname?: string;
+    avatarUrl?: string;
 };
 
 type AuthContextType = {
@@ -26,7 +27,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const jwt = localStorage.getItem('jwt');
         if (!jwt) return;
 
-        fetch(`${API_BASE}/user/me`, {
+        fetch(`${API_BASE}/auth/status`, {
             method: 'GET',
             headers: {
                 Authorization: `Bearer ${jwt}`,
@@ -35,7 +36,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             .then((res) => (res.ok ? res.json() : null))
             .then((data) => {
                 if (data) setUser(data);
-            });
+                else setUser(null);
+            })
+            .catch(() => setUser(null));
     }, []);
 
     return (

@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import NotificationToast from "@/components/NotificationToast";
+import dynamic from "next/dynamic";
 
 interface Trip {
   id: number;
@@ -105,59 +106,65 @@ export default function StepCreateForm() {
           ))}
         </select>
 
-        <input
-          type="text"
-          placeholder="Description"
-          className="input input-bordered w-full"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          required
-        />
+        {tripId && (
+          <>
+            <input
+              type="text"
+              placeholder="Description"
+              className="input input-bordered w-full"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              required
+            />
 
-        <div>
-          <input
-            type="text"
-            className="input input-bordered w-full"
-            placeholder="Adresse"
-            value={address}
-            onChange={(e) => handleSearch(e.target.value)}
-          />
-          {suggestions.length > 0 && (
-            <ul className="bg-white shadow rounded mt-2">
-              {suggestions.map((s, i) => (
-                <li
-                  key={i}
-                  className="p-2 cursor-pointer hover:bg-green-100"
-                  onClick={() => handleSelectSuggestion(s)}
-                >
-                  {s.display_name}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+            <div>
+              <input
+                type="text"
+                className="input input-bordered w-full"
+                placeholder="Adresse"
+                value={address}
+                onChange={(e) => handleSearch(e.target.value)}
+              />
+              {suggestions.length > 0 && (
+                <ul className="bg-white shadow rounded mt-2">
+                  {suggestions.map((s, i) => (
+                    <li
+                      key={i}
+                      className="p-2 cursor-pointer hover:bg-green-100"
+                      onClick={() => handleSelectSuggestion(s)}
+                    >
+                      {s.display_name}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
 
-        <input
-          type="date"
-          className="input input-bordered w-full"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          required
-        />
+            <input
+              type="date"
+              className="input input-bordered w-full"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              required
+            />
 
-        <button type="submit" className="btn btn-success">
-          Créer
-        </button>
+            <button type="submit" className="btn btn-success">
+              Créer
+            </button>
+          </>
+        )}
       </form>
 
-      <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50">
-        <NotificationToast
-          message={notifMsg}
-          type={notifType}
-          isVisible={notifVisible}
-          onClose={() => setNotifVisible(false)}
-        />
-      </div>
+      {notifVisible && (
+        <div className="fixed bottom-30 left-1/2 transform -translate-x-1/2 z-50 ">
+          <NotificationToast
+            message={notifMsg}
+            type={notifType}
+            isVisible={notifVisible}
+            onClose={() => setNotifVisible(false)}
+          />
+        </div>
+      )}
     </>
   );
 }

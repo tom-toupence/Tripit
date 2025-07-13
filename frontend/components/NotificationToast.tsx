@@ -27,6 +27,8 @@ export default function NotificationToast({
 
   return (
     <div
+      aria-live="assertive"
+      role="alert"
       className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-md text-white transition-opacity duration-300 ${
         type === "success" ? "bg-green-500" : "bg-red-500"
       }`}

@@ -21,8 +21,6 @@ type Step = {
     longitude: number;
 };
 
-// Pensez à mettre vos SVG dans public/assets/pins/
-// Ex : public/assets/pins/static_pin_redhead.svg
 const STATIC_PIN_URL   = '/assets/pins/static_pin_ellipse_red.svg';
 const ANIMATED_PIN_URL = '/assets/pins/animated_pin_ellipse_red.svg';
 

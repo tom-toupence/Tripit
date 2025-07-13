@@ -1,5 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
+import NotificationToast from "@/components/NotificationToast";
+import ConfirmationModal from "@/components/ConfirmationModal";
 
 interface Step {
   id: number;
@@ -9,6 +11,10 @@ interface Step {
 export default function StepDeleteForm() {
   const [steps, setSteps] = useState<Step[]>([]);
   const [selectedStepId, setSelectedStepId] = useState<number | null>(null);
+  const [notifVisible, setNotifVisible] = useState(false);
+  const [notifType, setNotifType] = useState<"success" | "error">("success");
+  const [notifMsg, setNotifMsg] = useState("");
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     fetch("http://localhost:8081/api/steps")
@@ -16,11 +22,12 @@ export default function StepDeleteForm() {
       .then(setSteps);
   }, []);
 
+  const confirmDelete = () => {
+    setShowModal(true);
+  };
+
   const handleDelete = async () => {
     if (!selectedStepId) return;
-
-    const confirm = window.confirm("Supprimer cette étape ?");
-    if (!confirm) return;
 
     const res = await fetch(
       `http://localhost:8081/api/steps/${selectedStepId}`,
@@ -30,12 +37,16 @@ export default function StepDeleteForm() {
     );
 
     if (res.ok) {
-      alert("Étape supprimée !");
+      setNotifType("success");
+      setNotifMsg("Étape supprimée !");
       setSteps((prev) => prev.filter((s) => s.id !== selectedStepId));
       setSelectedStepId(null);
     } else {
-      alert("Erreur lors de la suppression.");
+      setNotifType("error");
+      setNotifMsg("Erreur lors de la suppression.");
     }
+    setNotifVisible(true);
+    setShowModal(false);
   };
 
   return (
@@ -58,12 +69,29 @@ export default function StepDeleteForm() {
       </select>
 
       <button
-        onClick={handleDelete}
+        onClick={confirmDelete}
         className="btn btn-error"
         disabled={!selectedStepId}
       >
         Supprimer
       </button>
+
+      <ConfirmationModal
+        isOpen={showModal}
+        onConfirm={handleDelete}
+        onCancel={() => setShowModal(false)}
+        title="Confirmation"
+        message="Supprimer cette étape ?"
+      />
+
+      <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50">
+        <NotificationToast
+          message={notifMsg}
+          type={notifType}
+          isVisible={notifVisible}
+          onClose={() => setNotifVisible(false)}
+        />
+      </div>
     </div>
   );
 }

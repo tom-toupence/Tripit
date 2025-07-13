@@ -54,7 +54,10 @@ public class StepController {
             StepDTO updatedStep = stepService.updateStep(id, stepInputDTO);
             return ResponseEntity.ok(updatedStep);
         } catch (StepNotFoundException e) {
-
+            return ResponseEntity.notFound().build(); // 404 Not Found
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // 500 Internal Server Error
+        }
     }
 
     @PostMapping("/{tripId}")

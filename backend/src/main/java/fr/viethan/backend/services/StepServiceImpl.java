@@ -99,5 +99,33 @@ public class StepServiceImpl implements StepService {
                 .map(StepDTO::fromEntity)
                 .orElse(null); // Ou lancer une exception personnalisée si l'étape n'existe pas
     }
+
+
+    @Override
+    @Transactional
+    public StepDTO updateStep(Long id, StepInputDTO stepInputDTO) {
+        StepEntity stepEntity = stepRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Step not found with id: " + id));
+
+        // Mettre à jour les champs de l'entité avec les données du DTO
+        stepEntity.setDescription(stepInputDTO.getDescription());
+        stepEntity.setLatitude(stepInputDTO.getLatitude());
+        stepEntity.setLongitude(stepInputDTO.getLongitude());
+        stepEntity.setDate(stepInputDTO.getDate());
+        // Enregistrer les modifications dans la base de données
+        StepEntity updatedStep = stepRepository.save(stepEntity);
+
+        // Retourner le DTO mis à jour
+        return StepDTO.fromEntity(updatedStep);
+    }
+
+    @Override
+    @Transactional
+    public void deleteStep(Long id) {
+        StepEntity stepEntity = stepRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Step not found with id: " + id));
+        stepRepository.delete(stepEntity);
+    }
+
 }
 

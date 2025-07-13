@@ -1,0 +1,19 @@
+
+<svg width="36" height="48" viewBox="0 0 48 64" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="gradHeadAnim" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FF4D4D"/>
+      <stop offset="100%" stop-color="#CC0000"/>
+    </linearGradient>
+  </defs>
+  <!-- Animated red ellipse outline -->
+  <ellipse cx="24" cy="50" rx="12" ry="6" stroke="#FF3B3B" stroke-width="2" fill="none">
+    <animate attributeName="rx" values="12;18;12" dur="1.5s" repeatCount="indefinite"/>
+    <animate attributeName="ry" values="6;9;6" dur="1.5s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="1;0.5;1" dur="1.5s" repeatCount="indefinite"/>
+  </ellipse>
+  <!-- Pin stick -->
+  <rect x="22" y="32" width="4" height="20" rx="2" fill="#A3D8F4"/>
+  <!-- Pin head -->
+  <circle cx="24" cy="20" r="16" fill="url(#gradHeadAnim)"/>
+</svg>

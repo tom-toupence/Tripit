@@ -1,0 +1,16 @@
+
+<svg width="48" height="64" viewBox="0 0 48 64" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Gradient for the pin head -->
+    <linearGradient id="gradHeadStatic2" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FF4D4D"/>
+      <stop offset="100%" stop-color="#CC0000"/>
+    </linearGradient>
+  </defs>
+  <!-- Static outline ellipse at foot -->
+  <ellipse cx="24" cy="50" rx="12" ry="6" stroke="#000" stroke-width="2" fill="none"/>
+  <!-- Pin stick -->
+  <rect x="22" y="32" width="4" height="20" rx="2" fill="#A3D8F4"/>
+  <!-- Pin head fully filled red gradient -->
+  <circle cx="24" cy="20" r="16" fill="url(#gradHeadStatic2)" />
+</svg>

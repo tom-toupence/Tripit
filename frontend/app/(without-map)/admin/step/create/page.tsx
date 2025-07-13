@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import NotificationToast from "@/components/NotificationToast";
 import dynamic from "next/dynamic";
+import { API_BASE_URL } from "@/lib/config";
 
 interface Trip {
   id: number;
@@ -29,7 +30,7 @@ export default function StepCreateForm() {
   const [notifMsg, setNotifMsg] = useState("");
 
   useEffect(() => {
-    fetch("http://localhost:8081/api/trips")
+    fetch(API_BASE_URL + "/trips")
       .then((res) => res.json())
       .then(setTrips);
   }, []);
@@ -57,7 +58,7 @@ export default function StepCreateForm() {
     e.preventDefault();
     if (!tripId || !date || latitude === null || longitude === null) return;
 
-    const response = await fetch(`http://localhost:8081/api/steps/${tripId}`, {
+    const response = await fetch(API_BASE_URL + `/steps/${tripId}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

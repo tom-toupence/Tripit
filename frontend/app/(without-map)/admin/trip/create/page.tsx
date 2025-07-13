@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import NotificationToast from "@/components/NotificationToast";
 import ConfirmationModal from "@/components/ConfirmationModal";
+import { API_BASE_URL } from "@/lib/config";
 
 interface Trip {
   id: number;
@@ -20,7 +21,7 @@ export default function TripCreateForm() {
   const router = useRouter();
 
   useEffect(() => {
-    fetch("http://localhost:8081/api/trips")
+    fetch(API_BASE_URL + "/trips")
       .then((res) => res.json())
       .then(setExistingTrips);
   }, []);
@@ -45,7 +46,7 @@ export default function TripCreateForm() {
   };
 
   const confirmCreate = async () => {
-    const response = await fetch("http://localhost:8081/api/trips", {
+    const response = await fetch(API_BASE_URL + "/trips", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ country, steps: [] }),

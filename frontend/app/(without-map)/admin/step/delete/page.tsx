@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import NotificationToast from "@/components/NotificationToast";
 import ConfirmationModal from "@/components/ConfirmationModal";
+import { API_BASE_URL } from "@/lib/config";
 
 interface Trip {
   id: number;
@@ -27,7 +28,7 @@ export default function StepDeleteForm() {
 
   // Charger les trips
   useEffect(() => {
-    fetch("http://localhost:8081/api/trips")
+    fetch(API_BASE_URL + "/trips")
       .then((res) => res.json())
       .then(setTrips);
   }, []);
@@ -39,7 +40,7 @@ export default function StepDeleteForm() {
       setSelectedStepId(null);
       return;
     }
-    fetch(`http://localhost:8081/api/steps/trips/${tripId}/steps`)
+    fetch(API_BASE_URL + `/steps/trips/${tripId}/steps`)
       .then((res) => res.json())
       .then(setSteps);
   }, [tripId]);
@@ -52,12 +53,9 @@ export default function StepDeleteForm() {
   const handleDelete = async () => {
     if (!selectedStepId) return;
 
-    const res = await fetch(
-      `http://localhost:8081/api/steps/${selectedStepId}`,
-      {
-        method: "DELETE",
-      }
-    );
+    const res = await fetch(API_BASE_URL + `/steps/${selectedStepId}`, {
+      method: "DELETE",
+    });
 
     if (res.ok) {
       setNotifType("success");

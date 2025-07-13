@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import NotificationToast from "@/components/NotificationToast";
 import ConfirmationModal from "@/components/ConfirmationModal";
+import { API_BASE_URL } from "@/lib/config";
 
 interface Trip {
   id: number;
@@ -42,14 +43,14 @@ export default function StepEditForm() {
   const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
-    fetch("http://localhost:8081/api/trips")
+    fetch(API_BASE_URL + "/trips")
       .then((res) => res.json())
       .then(setTrips);
   }, []);
 
   useEffect(() => {
     if (!tripId) return;
-    fetch(`http://localhost:8081/api/steps/trips/${tripId}/steps`)
+    fetch(API_BASE_URL + `/steps/trips/${tripId}/steps`)
       .then((res) => res.json())
       .then(setSteps);
     setSelectedStepId(null);
@@ -100,21 +101,18 @@ export default function StepEditForm() {
   const confirmUpdate = async () => {
     if (!selectedStepId) return;
 
-    const response = await fetch(
-      `http://localhost:8081/api/steps/${selectedStepId}`,
-      {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: selectedStepId,
-          description,
-          latitude,
-          longitude,
-          date,
-          tripId,
-        }),
-      }
-    );
+    const response = await fetch(API_BASE_URL + `/steps/${selectedStepId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: selectedStepId,
+        description,
+        latitude,
+        longitude,
+        date,
+        tripId,
+      }),
+    });
 
     if (response.ok) {
       setNotifType("success");

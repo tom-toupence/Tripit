@@ -9,9 +9,6 @@ import {
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import clsx from "clsx";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
-import "leaflet/dist/leaflet.css";
-import L from "leaflet";
 
 type Trip = {
   id: number;
@@ -25,15 +22,6 @@ type Step = {
   latitude: number;
   longitude: number;
 };
-
-// Correction pour icônes Leaflet dans Next.js
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl:
-    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-});
 
 const CREATE_NEW_TRIP_OPTION: Trip = {
   id: -1,
@@ -63,7 +51,7 @@ export default function TripBox() {
         const uniqueCountries = Array.from(
           new Map(data.map((trip) => [trip.country, trip])).values()
         );
-        setTrips([...uniqueCountries, CREATE_NEW_TRIP_OPTION]);
+        setTrips([...uniqueCountries]);
       })
       .catch((err) =>
         console.error("Erreur lors du chargement des pays :", err)
@@ -279,100 +267,6 @@ export default function TripBox() {
           </div>
         )}
       </Listbox>
-
-      {showForm && (
-        <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 w-[360px] bg-white dark:bg-black text-sm p-4 rounded-xl shadow-2xl border border-green-300 space-y-3">
-          {/* Bouton Fermer */}
-          <button
-            onClick={resetForm}
-            className="absolute top-2 right-2 text-gray-400 hover:text-red-500"
-          >
-            <XMarkIcon className="h-5 w-5" />
-          </button>
-
-          <h3 className="font-semibold text-green-700 dark:text-green-300 text-center">
-            Créer un nouveau voyage
-          </h3>
-          <form
-            onSubmit={handleCreateTrip}
-            className="flex flex-col space-y-2 relative"
-          >
-            <input
-              type="text"
-              placeholder="Pays"
-              value={newCountry}
-              onChange={(e) => setNewCountry(e.target.value)}
-              required
-              className="border p-2 rounded"
-            />
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Adresse complète"
-                value={address}
-                onChange={handleAddressChange}
-                required
-                className="border p-2 rounded w-full"
-              />
-              {addressSuggestions.length > 0 && (
-                <ul className="absolute top-full left-0 w-full border border-gray-300 bg-white rounded-md max-h-40 overflow-y-auto shadow-md z-50 mt-1">
-                  {addressSuggestions.map((suggestion, index) => (
-                    <li
-                      key={index}
-                      onClick={() => handleSelectSuggestion(suggestion)}
-                      className="px-3 py-2 cursor-pointer hover:bg-green-100 text-sm"
-                    >
-                      {suggestion.display_name}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              required
-              className="border p-2 rounded"
-            />
-            <input
-              type="text"
-              placeholder="Description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              required
-              className="border p-2 rounded"
-            />
-
-            {latLng && (
-              <div className="h-56 w-full rounded border">
-                <MapContainer
-                  center={[latLng.lat, latLng.lon]}
-                  zoom={13}
-                  scrollWheelZoom={false}
-                  className="h-full w-full z-10"
-                >
-                  <ChangeMapView coords={latLng} />
-                  <TileLayer
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
-                  />
-                  <Marker position={[latLng.lat, latLng.lon]}>
-                    <Popup>{address}</Popup>
-                  </Marker>
-                </MapContainer>
-              </div>
-            )}
-
-            <button
-              type="submit"
-              className="bg-green-600 text-white p-2 rounded hover:bg-green-700"
-            >
-              Créer
-            </button>
-          </form>
-        </div>
-      )}
     </div>
   );
 }

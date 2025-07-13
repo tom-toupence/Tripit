@@ -47,20 +47,6 @@ public class StepController {
         }
     }
 
-    @PostMapping("/{tripId}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<StepDTO> createStep(@PathVariable Long tripId, @RequestBody StepInputDTO stepInputDTO) {
-        try {
-            StepDTO createdStep = stepService.createStep(tripId, stepInputDTO);
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdStep);
-        } catch (TripNotFoundException e) {
-            return ResponseEntity.notFound().build();
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-
-    }
-
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<StepDTO> updateStep(@PathVariable Long id, @RequestBody StepInputDTO stepInputDTO) {
@@ -68,11 +54,23 @@ public class StepController {
             StepDTO updatedStep = stepService.updateStep(id, stepInputDTO);
             return ResponseEntity.ok(updatedStep);
         } catch (StepNotFoundException e) {
+
+    }
+
+    @PostMapping("/{tripId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<StepDTO> createStep(@PathVariable Long tripId, @RequestBody StepInputDTO stepInputDTO) {
+        try {
+            StepDTO createdStep = stepService.createStep(tripId, stepInputDTO);
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdStep);
+        } catch (TripNotFoundException e) {
+
             return ResponseEntity.notFound().build();
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
@@ -86,6 +84,5 @@ public class StepController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // 500 Internal Server Error
         }
     }
-
 
 }

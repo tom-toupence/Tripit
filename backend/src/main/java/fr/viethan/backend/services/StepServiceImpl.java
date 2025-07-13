@@ -100,6 +100,7 @@ public class StepServiceImpl implements StepService {
                 .orElse(null); // Ou lancer une exception personnalisée si l'étape n'existe pas
     }
 
+
     @Override
     @Transactional
     public StepDTO updateStep(Long id, StepInputDTO stepInputDTO) {
@@ -125,5 +126,6 @@ public class StepServiceImpl implements StepService {
                 .orElseThrow(() -> new IllegalArgumentException("Step not found with id: " + id));
         stepRepository.delete(stepEntity);
     }
+
 }
 

@@ -28,7 +28,9 @@ export default function AuthButton() {
                 .then((data) => {
                     if (data.authenticated) {
                         if (setUser) {
-                            setUser({email: data.email, avatarUrl: data.avatarUrl, name: data.name});
+                            setUser({
+                                email: data.email, avatarUrl: data.avatarUrl, name: data.name, role: data.role,
+                            });
                         }
                     } else {
                         localStorage.removeItem("jwt");
@@ -43,7 +45,7 @@ export default function AuthButton() {
                     }
                 });
         }
-    }, []);
+    }, [setUser]);
 
     const handleGoogleLogin = () => {
         router.push("/login");

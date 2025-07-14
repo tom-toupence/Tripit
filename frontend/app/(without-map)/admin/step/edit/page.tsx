@@ -71,7 +71,7 @@ export default function StepEditForm() {
           setAddress(data.display_name || "");
         });
     }
-  }, [selectedStepId]);
+  }, [selectedStepId, steps]);
 
   const handleSearch = async (query: string) => {
     setAddress(query);

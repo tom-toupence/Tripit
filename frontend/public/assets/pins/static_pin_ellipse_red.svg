@@ -1,0 +1,15 @@
+
+<svg width="36" height="48" viewBox="0 0 48 64" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="gradHead" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FF4D4D"/>
+      <stop offset="100%" stop-color="#CC0000"/>
+    </linearGradient>
+  </defs>
+  <!-- Red ellipse outline -->
+  <ellipse cx="24" cy="50" rx="12" ry="6" stroke="#FF3B3B" stroke-width="2" fill="none"/>
+  <!-- Pin stick -->
+  <rect x="22" y="32" width="4" height="20" rx="2" fill="#A3D8F4"/>
+  <!-- Pin head -->
+  <circle cx="24" cy="20" r="16" fill="url(#gradHead)"/>
+</svg>

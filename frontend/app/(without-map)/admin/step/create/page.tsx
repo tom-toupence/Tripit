@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
 import NotificationToast from "@/components/NotificationToast";
-import dynamic from "next/dynamic";
 import { API_BASE_URL } from "@/lib/config";
 
 interface Trip {

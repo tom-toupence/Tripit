@@ -4,7 +4,6 @@ import { Mail, User } from "react-feather";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { API_BASE } from "@/services/constants";
-import {AiFillApi} from "react-icons/ai";
 
 export default function Contact() {
     const { user } = useAuth() ?? {};

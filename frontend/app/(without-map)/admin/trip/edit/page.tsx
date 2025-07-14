@@ -1,8 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import NotificationToast from "@/components/NotificationToast";
 import ConfirmationModal from "@/components/ConfirmationModal";
+import {API_BASE_URL} from "@/lib/config";
 
 interface Trip {
   id: number;
@@ -19,8 +19,6 @@ export default function TripEditForm() {
   const [notifMsg, setNotifMsg] = useState("");
   const [showModal, setShowModal] = useState(false);
 
-  const router = useRouter();
-
   useEffect(() => {
     fetch(`${API_BASE_URL}/trips`)
       .then((res) => res.json())
@@ -32,7 +30,7 @@ export default function TripEditForm() {
     if (trip) {
       setCountry(trip.country);
     }
-  }, [selectedTripId]);
+  }, [selectedTripId, trips]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

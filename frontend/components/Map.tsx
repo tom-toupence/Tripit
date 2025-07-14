@@ -9,10 +9,12 @@ const containerStyle = {
     display: 'flex',
 };
 
-const center = {
-    lat: 14.0583,
-    lng: 108.2772,
-};
+// Vue initiale centrée sur (20,30) niveau monde
+const center = { lat: 20, lng: 30 };
+const initialZoom = 1;
+
+// Niveau de zoom lorsque vous « focus » sur une étape
+const focusZoom = 7;
 
 type Step = {
     id: number;
@@ -23,51 +25,68 @@ type Step = {
 
 const STATIC_PIN_URL   = '/assets/pins/static_pin_ellipse_red.svg';
 const ANIMATED_PIN_URL = '/assets/pins/animated_pin_ellipse_red.svg';
-
-// On agrandit à 36px de large, ce qui donne 48px de haut (64×0.75)
 const PIN_PIXEL_WIDTH  = 36;
 const PIN_PIXEL_HEIGHT = 48;
 const VIEWBOX_WIDTH    = 48;
-// L’ellipse de pied est centrée en (24,50) dans le SVG
 const ELLIPSE_CX       = 24;
 const ELLIPSE_CY       = 50;
-// Calcul de l’échelle
 const scale = PIN_PIXEL_WIDTH / VIEWBOX_WIDTH;
 
+// Icônes
 function staticPin(): google.maps.Icon {
     return {
         url: STATIC_PIN_URL,
-        scaledSize: new window.google.maps.Size(
-            PIN_PIXEL_WIDTH,
-            PIN_PIXEL_HEIGHT
-        ),
-        anchor: new window.google.maps.Point(
-            ELLIPSE_CX * scale,
-            ELLIPSE_CY * scale
-        ),
+        scaledSize: new window.google.maps.Size(PIN_PIXEL_WIDTH, PIN_PIXEL_HEIGHT),
+        anchor: new window.google.maps.Point(ELLIPSE_CX * scale, ELLIPSE_CY * scale),
     };
 }
-
 function animatedPin(): google.maps.Icon {
     return {
         url: ANIMATED_PIN_URL,
-        scaledSize: new window.google.maps.Size(
-            PIN_PIXEL_WIDTH,
-            PIN_PIXEL_HEIGHT
-        ),
-        anchor: new window.google.maps.Point(
-            ELLIPSE_CX * scale,
-            ELLIPSE_CY * scale
-        ),
+        scaledSize: new window.google.maps.Size(PIN_PIXEL_WIDTH, PIN_PIXEL_HEIGHT),
+        anchor: new window.google.maps.Point(ELLIPSE_CX * scale, ELLIPSE_CY * scale),
     };
 }
 
-export default function Map() {
-    const mapRef = useRef<google.maps.Map|null>(null);
-    // stocke tous les markers pour les passer en statique
-    const markersRef = useRef<google.maps.Marker[]>([]);
-    const [pathCoordinates, setPathCoordinates] = useState<{lat:number;lng:number}[]>([]);
+// En cas de latitudes/lng hors bornes
+function normalizeCoords(lat: number, lng: number) {
+    if (lat > 90 || lat < -90) {
+        return { lat: lng, lng: lat };
+    }
+    return { lat, lng };
+}
 
+// Animation de panoramique en plusieurs frames
+function animateToLocation(
+    map: google.maps.Map,
+    target: { lat: number; lng: number }
+) {
+    const frames = 60;
+    const start = map.getCenter()!;
+    const startLat = start.lat();
+    const startLng = start.lng();
+    const dLat = (target.lat - startLat) / frames;
+    const dLng = (target.lng - startLng) / frames;
+
+    map.setZoom(focusZoom);
+
+    let i = 0;
+    const iv = window.setInterval(() => {
+        i++;
+        map.panTo({
+            lat: startLat + dLat * i,
+            lng: startLng + dLng * i,
+        });
+        if (i >= frames) window.clearInterval(iv);
+    }, 16);
+}
+
+export default function Map() {
+    const mapRef = useRef<google.maps.Map | null>(null);
+    const markersRef = useRef<google.maps.Marker[]>([]);
+    const [pathCoordinates, setPathCoordinates] = useState<{ lat: number; lng: number }[]>([]);
+
+    // 1) Clear markers + polyline
     useEffect(() => {
         const clearMap = () => {
             markersRef.current.forEach(m => m.setMap(null));
@@ -75,49 +94,32 @@ export default function Map() {
             setPathCoordinates([]);
         };
         window.addEventListener('showMarkers', clearMap);
-        return () => {
-            window.removeEventListener('showMarkers', clearMap);
-        };
+        return () => window.removeEventListener('showMarkers', clearMap);
     }, []);
 
+    // 2) Quand la carte se charge, on centre et zoom monde
     const onLoad = (map: google.maps.Map) => {
         mapRef.current = map;
+        map.setCenter(center);
+        map.setZoom(initialZoom);
     };
 
-    const animateToLocation = (step: Step) => {
-        if (!mapRef.current) return;
-        const map = mapRef.current;
-        const frames = 60;
-        const start = map.getCenter()!;
-        const startLat = start.lat();
-        const startLng = start.lng();
-        const dLat = (step.latitude - startLat) / frames;
-        const dLng = (step.longitude - startLng) / frames;
-        map.setZoom(7);
-
-        let i = 0;
-        const iv = window.setInterval(() => {
-            i++;
-            map.panTo({
-                lat: startLat + dLat * i,
-                lng: startLng + dLng * i,
-            });
-            if (i >= frames) window.clearInterval(iv);
-        }, 16);
-    };
-
+    // 3) À chaque focusOnStep : marker, polyline, puis pan animé ou téléport
     useEffect(() => {
         const handleFocus = (e: Event) => {
-            const step = (e as CustomEvent).detail as Step;
-            if (!mapRef.current) return;
+            const step = (e as CustomEvent<Step>).detail;
+            const map = mapRef.current;
+            if (!map) return;
 
-            // 1) tous les anciens markers deviennent statiques
+            const { lat, lng } = normalizeCoords(step.latitude, step.longitude);
+
+            // rendre anciens markers statiques
             markersRef.current.forEach(m => m.setIcon(staticPin()));
 
-            // 2) on crée le nouveau marker animé
-            const animated = new window.google.maps.Marker({
-                position: { lat: step.latitude, lng: step.longitude },
-                map: mapRef.current,
+            // ajouter marker animé
+            const marker = new window.google.maps.Marker({
+                position: { lat, lng },
+                map,
                 title: step.locationName,
                 icon: animatedPin(),
                 zIndex: 999,
@@ -125,20 +127,20 @@ export default function Map() {
             const infoWindow = new window.google.maps.InfoWindow({
                 content: `<b>${step.locationName}</b>`,
             });
-            animated.addListener('click', () => {
-                infoWindow.open(mapRef.current!, animated);
-            });
+            marker.addListener('click', () => infoWindow.open(map, marker));
+            markersRef.current.push(marker);
 
-            // on stocke pour les prochaines itérations
-            markersRef.current.push(animated);
+            // étendre la polyline
+            setPathCoordinates(prev => [...prev, { lat, lng }]);
 
-            // 3) on étend la polyline
-            setPathCoordinates(prev => [
-                ...prev,
-                { lat: step.latitude, lng: step.longitude },
-            ]);
-
-            animateToLocation(step);
+            // si c'est la première étape, on téléporte + zoom
+            if (markersRef.current.length === 1) {
+                map.setCenter({ lat, lng });
+                map.setZoom(focusZoom);
+            } else {
+                // sinon, on anime le pan entre l'ancienne et la nouvelle position
+                animateToLocation(map, { lat, lng });
+            }
         };
 
         window.addEventListener('focusOnStep', handleFocus);
@@ -154,7 +156,7 @@ export default function Map() {
             <GoogleMap
                 mapContainerStyle={containerStyle}
                 center={center}
-                zoom={6}
+                zoom={initialZoom}
                 onLoad={onLoad}
                 options={{
                     gestureHandling: 'greedy',
@@ -167,7 +169,7 @@ export default function Map() {
                             west:  -169,
                             east:   190,
                         },
-                        strictBounds: true,
+                        strictBounds: false,
                     },
                 }}
             >

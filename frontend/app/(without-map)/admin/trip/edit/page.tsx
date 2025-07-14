@@ -22,7 +22,7 @@ export default function TripEditForm() {
   const router = useRouter();
 
   useEffect(() => {
-    fetch("http://localhost:8081/api/trips")
+    fetch(`${API_BASE_URL}/trips`)
       .then((res) => res.json())
       .then(setTrips);
   }, []);

@@ -9,6 +9,7 @@ import {
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import clsx from "clsx";
+import { API_BASE_URL } from "@/lib/config";
 
 type Trip = {
   id: number;
@@ -45,7 +46,7 @@ export default function TripBox() {
   );
 
   useEffect(() => {
-    fetch("http://localhost:8081/api/trips")
+    fetch(API_BASE_URL + "/trips")
       .then((res) => res.json())
       .then((data: Trip[]) => {
         const uniqueCountries = Array.from(
@@ -124,7 +125,7 @@ export default function TripBox() {
       ],
     };
 
-    fetch("http://localhost:8081/api/trips", {
+    fetch(API_BASE_URL + "/trips", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
@@ -161,7 +162,7 @@ export default function TripBox() {
 
   function showMarkers(trip: Trip) {
     const event = new CustomEvent("showMarkers", { detail: trip });
-    fetch(`http://localhost:8081/api/trips/${trip.id}`)
+    fetch(API_BASE_URL + `/trips/${trip.id}`)
       .then((res) => res.json())
       .then((data: { steps: Step[] }) => {
         const steps = data.steps;

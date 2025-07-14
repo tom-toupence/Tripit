@@ -1,5 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
+import NotificationToast from "@/components/NotificationToast";
+import ConfirmationModal from "@/components/ConfirmationModal";
+import { API_BASE_URL } from "@/lib/config";
 
 interface Trip {
   id: number;
@@ -9,32 +12,39 @@ interface Trip {
 export default function TripDeleteForm() {
   const [trips, setTrips] = useState<Trip[]>([]);
   const [selectedTripId, setSelectedTripId] = useState<number | null>(null);
+  const [notifVisible, setNotifVisible] = useState(false);
+  const [notifType, setNotifType] = useState<"success" | "error">("success");
+  const [notifMsg, setNotifMsg] = useState("");
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
-    fetch("http://localhost:8081/api/trips")
+    fetch(API_BASE_URL + "/trips")
       .then((res) => res.json())
       .then(setTrips);
   }, []);
 
+  const confirmDelete = () => {
+    setShowModal(true);
+  };
+
   const handleDelete = async () => {
     if (!selectedTripId) return;
-    const confirm = window.confirm("Supprimer ce voyage ?");
-    if (!confirm) return;
 
-    const response = await fetch(
-      `http://localhost:8081/api/trips/${selectedTripId}`,
-      {
-        method: "DELETE",
-      }
-    );
+    const response = await fetch(API_BASE_URL + `/trips/${selectedTripId}`, {
+      method: "DELETE",
+    });
 
     if (response.ok) {
-      alert("Voyage supprimé !");
+      setNotifType("success");
+      setNotifMsg("Voyage supprimé avec succès !");
       setTrips((prev) => prev.filter((t) => t.id !== selectedTripId));
       setSelectedTripId(null);
     } else {
-      alert("Erreur lors de la suppression.");
+      setNotifType("error");
+      setNotifMsg("Erreur lors de la suppression du voyage.");
     }
+    setNotifVisible(true);
+    setShowModal(false);
   };
 
   return (
@@ -57,12 +67,29 @@ export default function TripDeleteForm() {
       </select>
 
       <button
-        onClick={handleDelete}
+        onClick={confirmDelete}
         className="btn btn-error"
         disabled={!selectedTripId}
       >
         Supprimer
       </button>
+
+      <ConfirmationModal
+        isOpen={showModal}
+        onConfirm={handleDelete}
+        onCancel={() => setShowModal(false)}
+        title="Confirmation"
+        message="Voulez-vous vraiment supprimer ce voyage ?"
+      />
+
+      <div className="fixed bottom-20 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-lg">
+        <NotificationToast
+          message={notifMsg}
+          type={notifType}
+          isVisible={notifVisible}
+          onClose={() => setNotifVisible(false)}
+        />
+      </div>
     </div>
   );
 }

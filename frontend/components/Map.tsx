@@ -68,6 +68,18 @@ export default function Map() {
     const markersRef = useRef<google.maps.Marker[]>([]);
     const [pathCoordinates, setPathCoordinates] = useState<{lat:number;lng:number}[]>([]);
 
+    useEffect(() => {
+        const clearMap = () => {
+            markersRef.current.forEach(m => m.setMap(null));
+            markersRef.current = [];
+            setPathCoordinates([]);
+        };
+        window.addEventListener('showMarkers', clearMap);
+        return () => {
+            window.removeEventListener('showMarkers', clearMap);
+        };
+    }, []);
+
     const onLoad = (map: google.maps.Map) => {
         mapRef.current = map;
     };
@@ -132,7 +144,6 @@ export default function Map() {
         window.addEventListener('focusOnStep', handleFocus);
         return () => {
             window.removeEventListener('focusOnStep', handleFocus);
-            // nettoyage
             markersRef.current.forEach(m => m.setMap(null));
             markersRef.current = [];
         };
@@ -148,6 +159,16 @@ export default function Map() {
                 options={{
                     gestureHandling: 'greedy',
                     disableDefaultUI: true,
+                    minZoom: 3,
+                    restriction: {
+                        latLngBounds: {
+                            north:  85,
+                            south: -85,
+                            west:  -169,
+                            east:   190,
+                        },
+                        strictBounds: true,
+                    },
                 }}
             >
                 <Polyline

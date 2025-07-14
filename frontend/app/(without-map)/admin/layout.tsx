@@ -14,25 +14,20 @@ export default function AdminLayout({
   const router   = useRouter();
 
   useEffect(() => {
-    // 1) tant qu'on ne sait pas si l'utilisateur est admin, on ne fait rien
     if (user === undefined) return;
 
-    // 2) dès qu'on sait que ce n'est pas un admin, on redirige
     if (!user || user.role?.toLowerCase() !== "admin") {
       router.replace("/");
     }
   }, [user, router]);
 
-  // 3) on bloque l'affichage tant que user est undefined (chargement)
-  //    ou si user n'est pas admin
   if (user === undefined) {
-    return null; // ou un spinner
+    return null;
   }
   if (!user || user.role?.toLowerCase() !== "admin") {
     return null;
   }
 
-  // 4) ici, on est bien admin : on affiche le layout complet
   return (
       <main className="min-h-screen w-full bg-gradient-to-b from-white via-green-50 to-green-100 pt-24 pb-16 flex">
         {/* Menu latéral */}

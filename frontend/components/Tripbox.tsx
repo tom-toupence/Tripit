@@ -9,7 +9,7 @@ import {
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import clsx from "clsx";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import { API_BASE_URL } from "@/lib/config";
 
 type Trip = {
   id: number;
@@ -47,13 +47,13 @@ export default function TripBox() {
   );
 
   useEffect(() => {
-    fetch("http://localhost:8081/api/trips")
+    fetch(API_BASE_URL + "/trips")
       .then((res) => res.json())
       .then((data: Trip[]) => {
         const uniqueCountries = Array.from(
           new Map(data.map((trip) => [trip.country, trip])).values()
         );
-        setTrips([...uniqueCountries, CREATE_NEW_TRIP_OPTION]);
+        setTrips([...uniqueCountries]);
       })
       .catch((err) =>
         console.error("Erreur lors du chargement des pays :", err)
@@ -126,7 +126,7 @@ export default function TripBox() {
       ],
     };
 
-    fetch("http://localhost:8081/api/trips", {
+    fetch(API_BASE_URL + "/trips", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
@@ -163,7 +163,7 @@ export default function TripBox() {
 
   function showMarkers(trip: Trip) {
     const event = new CustomEvent("showMarkers", { detail: trip });
-    fetch(`http://localhost:8081/api/trips/${trip.id}`)
+    fetch(API_BASE_URL + `/trips/${trip.id}`)
       .then((res) => res.json())
       .then((data: { steps: Step[] }) => {
         const steps = data.steps;

@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import NotificationToast from "@/components/NotificationToast";
 import ConfirmationModal from "@/components/ConfirmationModal";
+import { API_BASE_URL } from "@/lib/config";
 
 interface Trip {
   id: number;
@@ -17,6 +18,12 @@ interface Step {
   tripId: number;
 }
 
+interface Suggestion {
+  display_name: string;
+  lat: string;
+  lon: string;
+}
+
 export default function StepEditForm() {
   const [trips, setTrips] = useState<Trip[]>([]);
   const [tripId, setTripId] = useState<number | null>(null);
@@ -27,6 +34,8 @@ export default function StepEditForm() {
   const [latitude, setLatitude] = useState(0);
   const [longitude, setLongitude] = useState(0);
   const [date, setDate] = useState("");
+  const [address, setAddress] = useState("");
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
 
   const [notifVisible, setNotifVisible] = useState(false);
   const [notifType, setNotifType] = useState<"success" | "error">("success");
@@ -34,14 +43,14 @@ export default function StepEditForm() {
   const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
-    fetch("http://localhost:8081/api/trips")
+    fetch(API_BASE_URL + "/trips")
       .then((res) => res.json())
       .then(setTrips);
   }, []);
 
   useEffect(() => {
     if (!tripId) return;
-    fetch(`http://localhost:8081/api/steps/trips/${tripId}/steps`)
+    fetch(API_BASE_URL + `/steps/trips/${tripId}/steps`)
       .then((res) => res.json())
       .then(setSteps);
     setSelectedStepId(null);
@@ -54,8 +63,34 @@ export default function StepEditForm() {
       setLatitude(step.latitude);
       setLongitude(step.longitude);
       setDate(step.date);
+      fetch(
+        `https://nominatim.openstreetmap.org/reverse?lat=${step.latitude}&lon=${step.longitude}&format=json`
+      )
+        .then((res) => res.json())
+        .then((data) => {
+          setAddress(data.display_name || "");
+        });
     }
   }, [selectedStepId]);
+
+  const handleSearch = async (query: string) => {
+    setAddress(query);
+    if (query.length < 3) return;
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
+        query
+      )}&format=json&limit=5`
+    );
+    const data = await res.json();
+    setSuggestions(data);
+  };
+
+  const handleSelectSuggestion = (s: Suggestion) => {
+    setAddress(s.display_name);
+    setLatitude(parseFloat(s.lat));
+    setLongitude(parseFloat(s.lon));
+    setSuggestions([]);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,21 +101,18 @@ export default function StepEditForm() {
   const confirmUpdate = async () => {
     if (!selectedStepId) return;
 
-    const response = await fetch(
-      `http://localhost:8081/api/steps/${selectedStepId}`,
-      {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: selectedStepId,
-          description,
-          latitude,
-          longitude,
-          date,
-          tripId,
-        }),
-      }
-    );
+    const response = await fetch(API_BASE_URL + `/steps/${selectedStepId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        id: selectedStepId,
+        description,
+        latitude,
+        longitude,
+        date,
+        tripId,
+      }),
+    });
 
     if (response.ok) {
       setNotifType("success");
@@ -124,7 +156,8 @@ export default function StepEditForm() {
             </option>
             {steps.map((step) => (
               <option key={step.id} value={step.id}>
-                {step.description} ({step.date})
+                {step.description} -{" "}
+                {new Date(step.date).toLocaleDateString("fr-FR")}
               </option>
             ))}
           </select>
@@ -140,22 +173,30 @@ export default function StepEditForm() {
               placeholder="Description"
               required
             />
-            <input
-              type="number"
-              value={latitude}
-              onChange={(e) => setLatitude(parseFloat(e.target.value))}
-              className="input input-bordered w-full"
-              placeholder="Latitude"
-              required
-            />
-            <input
-              type="number"
-              value={longitude}
-              onChange={(e) => setLongitude(parseFloat(e.target.value))}
-              className="input input-bordered w-full"
-              placeholder="Longitude"
-              required
-            />
+
+            <div>
+              <input
+                type="text"
+                className="input input-bordered w-full"
+                placeholder="Adresse"
+                value={address}
+                onChange={(e) => handleSearch(e.target.value)}
+              />
+              {suggestions.length > 0 && (
+                <ul className="bg-white shadow rounded mt-2">
+                  {suggestions.map((s, i) => (
+                    <li
+                      key={i}
+                      className="p-2 cursor-pointer hover:bg-green-100"
+                      onClick={() => handleSelectSuggestion(s)}
+                    >
+                      {s.display_name}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
             <input
               type="date"
               value={date}
@@ -178,7 +219,7 @@ export default function StepEditForm() {
         message="Confirmez-vous la modification de cette étape ?"
       />
 
-      <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50">
+      <div className="fixed bottom-20 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-lg">
         <NotificationToast
           message={notifMsg}
           type={notifType}

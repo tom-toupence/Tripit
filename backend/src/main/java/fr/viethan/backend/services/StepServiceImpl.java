@@ -2,10 +2,15 @@ package fr.viethan.backend.services;
 
 import fr.viethan.backend.dto.StepDTO;
 import fr.viethan.backend.dto.StepInputDTO;
+import fr.viethan.backend.entities.ImageEntity;
 import fr.viethan.backend.entities.OSMEntity;
 import fr.viethan.backend.entities.StepEntity;
 import fr.viethan.backend.entities.TripEntity;
+import fr.viethan.backend.exceptions.ImageUploadException;
+import fr.viethan.backend.exceptions.TripNotFoundException;
+import fr.viethan.backend.interfaces.ImageService;
 import fr.viethan.backend.interfaces.StepService;
+import fr.viethan.backend.repositories.ImageRepository;
 import fr.viethan.backend.repositories.StepRepository;
 import fr.viethan.backend.repositories.TripRepository;
 import org.springframework.http.HttpEntity;
@@ -14,11 +19,16 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import org.springframework.http.HttpHeaders;
+
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -26,14 +36,18 @@ public class StepServiceImpl implements StepService {
 
     private final StepRepository stepRepository;
     private final TripRepository tripRepository;
+    private final ImageService imageService;
+    private final ImageRepository imageRepository;
     private final RestTemplate restTemplate = new RestTemplate();
     private final String OSM_API_URL = "https://nominatim.openstreetmap.org/search?q=";
 
 
 
-    public StepServiceImpl(StepRepository stepRepository, TripRepository tripRepository) {
+    public StepServiceImpl(StepRepository stepRepository, TripRepository tripRepository, ImageService imageService, ImageRepository imageRepository) {
         this.stepRepository = stepRepository;
         this.tripRepository = tripRepository;
+        this.imageService = imageService;
+        this.imageRepository = imageRepository;
     }
 
     @Override
@@ -77,19 +91,40 @@ public class StepServiceImpl implements StepService {
 
     @Override
     @Transactional
-    public StepDTO createStep(Long tripId, StepInputDTO stepDTO) {
-        // Convertir le DTO en entité
+    public StepDTO createStep(Long tripId, StepInputDTO inputDTO) throws ImageUploadException {
+        TripEntity trip = tripRepository.findById(tripId)
+                .orElseThrow(() -> new TripNotFoundException(tripId));
+        StepEntity stepEntity = inputDTO.toEntity();
+        stepEntity.setTrip(trip);
 
-        TripEntity tripEntity= this.tripRepository.findById(tripId)
-                .orElseThrow(() -> new IllegalArgumentException("Trip not found with id: " + tripId));
-        StepEntity stepEntity = stepDTO.toEntity();
-        stepEntity.setTrip(tripEntity); // Associer l'étape au voyage
+        System.out.println("Creating step for trip ID: " + tripId);
 
         // Enregistrer l'étape dans la base de données
-        StepEntity savedStep = stepRepository.save(stepEntity);
+        StepEntity saved = stepRepository.save(stepEntity);
 
+        System.out.println("Step saved with ID: " + saved.getId());
+
+        List<ImageEntity> imgs = new ArrayList<>();
+        for (MultipartFile file : inputDTO.getImages()) {
+            String uuid = UUID.randomUUID().toString();
+            String key  = "trip/" + tripId + "/" + saved.getId() + "/" + uuid + "-" + file.getOriginalFilename();
+            System.out.println("Uploading image with key: " + key);
+            try {
+                // Upload de l'image
+                imageService.uploadFile(file, key);
+            } catch (IOException e) {
+                System.out.println("Failed to upload image: " + file.getOriginalFilename());
+                throw new ImageUploadException("Failed to upload image: " + file.getOriginalFilename());
+            }
+            ImageEntity img = new ImageEntity();
+            img.setKey(key);
+            img.setStep(saved);
+            imgs.add(img);
+        }
+        saved.getImages().addAll(imgs);
+        stepRepository.save(saved);
         // Retourner le DTO de l'étape enregistrée
-        return StepDTO.fromEntity(savedStep);
+        return StepDTO.fromEntity(saved);
     }
 
     @Override

@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -62,12 +63,12 @@ public class StepController {
 
     @PostMapping("/{tripId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<StepDTO> createStep(@PathVariable Long tripId, @RequestBody StepInputDTO stepInputDTO) {
+    public ResponseEntity<StepDTO> createStep(@PathVariable Long tripId, @ModelAttribute StepInputDTO inputDTO, @RequestParam("file") List<MultipartFile> files) {
         try {
-            StepDTO createdStep = stepService.createStep(tripId, stepInputDTO);
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdStep);
+            inputDTO.setImages(files);
+            StepDTO created = stepService.createStep(tripId, inputDTO);
+            return ResponseEntity.status(HttpStatus.CREATED).body(created);
         } catch (TripNotFoundException e) {
-
             return ResponseEntity.notFound().build();
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();

@@ -5,6 +5,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "steps")
@@ -21,9 +23,26 @@ public class StepEntity {
     private double longitude;
     private LocalDate date;
 
+    @OneToMany(
+            mappedBy = "step",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private List<ImageEntity> images = new ArrayList<>();
+
+
     @ManyToOne
     @JoinColumn(name = "trip_id", nullable = false)
     private TripEntity trip;
+
+    public void addImage(ImageEntity img) {
+        images.add(img);
+        img.setStep(this);
+    }
+    public void removeImage(ImageEntity img) {
+        images.remove(img);
+        img.setStep(null);
+    }
 
 
 }

@@ -2,6 +2,8 @@
 import { useEffect, useState } from "react";
 import NotificationToast from "@/components/NotificationToast";
 import { API_BASE_URL } from "@/lib/config";
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 
 interface Trip {
   id: number;
@@ -27,6 +29,9 @@ export default function StepCreateForm() {
   const [notifVisible, setNotifVisible] = useState(false);
   const [notifType, setNotifType] = useState<"success" | "error">("success");
   const [notifMsg, setNotifMsg] = useState("");
+  const [images, setImages] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+
 
   useEffect(() => {
     fetch(API_BASE_URL + "/trips")
@@ -46,6 +51,12 @@ export default function StepCreateForm() {
     setSuggestions(data);
   };
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    setImages(files);
+    setImagePreviews(files.map(f => URL.createObjectURL(f)));
+  };
+
   const handleSelectSuggestion = (s: Suggestion) => {
     setAddress(s.display_name);
     setLatitude(parseFloat(s.lat));
@@ -57,16 +68,17 @@ export default function StepCreateForm() {
     e.preventDefault();
     if (!tripId || !date || latitude === null || longitude === null) return;
 
+    const formData = new FormData();
+    formData.append("description", description);
+    formData.append("latitude", String(latitude));
+    formData.append("longitude", String(longitude));
+    formData.append("date", date);
+    formData.append("tripId", String(tripId));
+    images.forEach((img) => formData.append("file", img)); // "file" correspond au backend
+
     const response = await fetch(API_BASE_URL + `/steps/${tripId}`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        description,
-        latitude,
-        longitude,
-        date,
-        tripId,
-      }),
+      body: formData,
     });
 
     if (response.ok) {
@@ -78,6 +90,8 @@ export default function StepCreateForm() {
       setLatitude(null);
       setLongitude(null);
       setDate("");
+      setImages([]);
+      setImagePreviews([]);
     } else {
       setNotifType("error");
       setNotifMsg("Erreur lors de la création de l'étape.");
@@ -116,6 +130,26 @@ export default function StepCreateForm() {
               onChange={(e) => setDescription(e.target.value)}
               required
             />
+
+            <div className="grid w-full max-w-sm items-center gap-3 ">
+              <Input
+                  id="picture"
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  onChange={handleImageChange}
+              />
+              <div className="flex flex-wrap gap-2 mt-2">
+                {imagePreviews.map((src, idx) => (
+                    <img
+                        key={idx}
+                        src={src}
+                        alt={`Aperçu ${idx + 1}`}
+                        className="w-40 h-40 object-cover rounded border"
+                    />
+                ))}
+              </div>
+            </div>
 
             <div>
               <input

@@ -191,6 +191,9 @@ public class StepServiceImpl implements StepService {
     public void deleteStep(Long id) {
         StepEntity stepEntity = stepRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Step not found with id: " + id));
+        for (ImageEntity img : stepEntity.getImages()) {
+            imageService.deleteFile(img.getObjectKey());
+        }
         stepRepository.delete(stepEntity);
     }
 

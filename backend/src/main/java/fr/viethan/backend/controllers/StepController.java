@@ -50,14 +50,24 @@ public class StepController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<StepDTO> updateStep(@PathVariable Long id, @RequestBody StepInputDTO stepInputDTO) {
+    public ResponseEntity<StepDTO> updateStep(
+            @PathVariable Long id,
+            @ModelAttribute StepInputDTO stepInputDTO,
+            @RequestParam(value = "file", required = false) List<MultipartFile> files,
+            @RequestParam(value = "existingImageIds", required = false) List<Long> existingImageIds) {
         try {
+            if (files != null) {
+                stepInputDTO.setImages(files);
+            }
+            if (existingImageIds != null) {
+                stepInputDTO.setExistingImageIds(existingImageIds);
+            }
             StepDTO updatedStep = stepService.updateStep(id, stepInputDTO);
             return ResponseEntity.ok(updatedStep);
         } catch (StepNotFoundException e) {
-            return ResponseEntity.notFound().build(); // 404 Not Found
+            return ResponseEntity.notFound().build();
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // 500 Internal Server Error
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 

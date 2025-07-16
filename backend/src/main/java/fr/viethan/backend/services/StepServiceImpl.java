@@ -7,6 +7,7 @@ import fr.viethan.backend.entities.OSMEntity;
 import fr.viethan.backend.entities.StepEntity;
 import fr.viethan.backend.entities.TripEntity;
 import fr.viethan.backend.exceptions.ImageUploadException;
+import fr.viethan.backend.exceptions.StepNotFoundException;
 import fr.viethan.backend.exceptions.TripNotFoundException;
 import fr.viethan.backend.interfaces.ImageService;
 import fr.viethan.backend.interfaces.StepService;
@@ -94,38 +95,36 @@ public class StepServiceImpl implements StepService {
     public StepDTO createStep(Long tripId, StepInputDTO inputDTO) throws ImageUploadException {
         TripEntity trip = tripRepository.findById(tripId)
                 .orElseThrow(() -> new TripNotFoundException(tripId));
+
         StepEntity stepEntity = inputDTO.toEntity();
         stepEntity.setTrip(trip);
-
-        System.out.println("Creating step for trip ID: " + tripId);
-
-        // Enregistrer l'étape dans la base de données
         StepEntity saved = stepRepository.save(stepEntity);
-
-        System.out.println("Step saved with ID: " + saved.getId());
 
         List<ImageEntity> imgs = new ArrayList<>();
         for (MultipartFile file : inputDTO.getImages()) {
+            if (file == null || file.isEmpty()) {
+                continue;
+            }
+
             String uuid = UUID.randomUUID().toString();
-            String key  = "trip/" + tripId + "/" + saved.getId() + "/" + uuid + "-" + file.getOriginalFilename();
-            System.out.println("Uploading image with key: " + key);
+            String key  = "trips/"+ tripId + "/steps/" + saved.getId() + "/" + uuid + "-" + file.getOriginalFilename();
+
+            ImageEntity img;
             try {
-                // Upload de l'image
-                imageService.uploadFile(file, key);
+                img = imageService.uploadFile(file, key);
             } catch (IOException e) {
-                System.out.println("Failed to upload image: " + file.getOriginalFilename());
                 throw new ImageUploadException("Failed to upload image: " + file.getOriginalFilename());
             }
-            ImageEntity img = new ImageEntity();
-            img.setKey(key);
             img.setStep(saved);
             imgs.add(img);
         }
+
         saved.getImages().addAll(imgs);
         stepRepository.save(saved);
-        // Retourner le DTO de l'étape enregistrée
+
         return StepDTO.fromEntity(saved);
     }
+
 
     @Override
     @Transactional(readOnly = true)
@@ -138,21 +137,54 @@ public class StepServiceImpl implements StepService {
 
     @Override
     @Transactional
-    public StepDTO updateStep(Long id, StepInputDTO stepInputDTO) {
+    public StepDTO updateStep(Long id, StepInputDTO stepInputDTO) throws IOException {
         StepEntity stepEntity = stepRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Step not found with id: " + id));
+                .orElseThrow(() -> new StepNotFoundException(id));
 
-        // Mettre à jour les champs de l'entité avec les données du DTO
+        // Update champs basiques
         stepEntity.setDescription(stepInputDTO.getDescription());
         stepEntity.setLatitude(stepInputDTO.getLatitude());
         stepEntity.setLongitude(stepInputDTO.getLongitude());
         stepEntity.setDate(stepInputDTO.getDate());
-        // Enregistrer les modifications dans la base de données
-        StepEntity updatedStep = stepRepository.save(stepEntity);
 
-        // Retourner le DTO mis à jour
-        return StepDTO.fromEntity(updatedStep);
+        // 1. Supprimer images non gardées
+        List<ImageEntity> imagesToDelete = new ArrayList<>();
+        for (ImageEntity img : new ArrayList<>(stepEntity.getImages())) {
+            if (!stepInputDTO.getExistingImageIds().contains(img.getId())) {
+                imageService.deleteFile(img.getObjectKey());
+                imagesToDelete.add(img);
+            }
+        }
+        // Supprime côté parent (la collection !)
+        for (ImageEntity img : imagesToDelete) {
+            stepEntity.getImages().remove(img);
+            imageRepository.delete(img);
+        }
+
+        // 2. Ajouter nouvelles images
+        if (stepInputDTO.getImages() != null) {
+            for (MultipartFile file : stepInputDTO.getImages()) {
+                if (file == null || file.isEmpty()) continue;
+                String uuid = UUID.randomUUID().toString();
+                String key = "trips/" + stepEntity.getTrip().getId() + "/steps/" + stepEntity.getId() + "/" + uuid + "-" + file.getOriginalFilename();
+
+                if (!imageService.fileExists(key)) {
+                    try {
+                        ImageEntity newImg = imageService.uploadFile(file, key);
+                        newImg.setStep(stepEntity);
+                        stepEntity.getImages().add(newImg);
+                        imageRepository.save(newImg);
+                    } catch (IOException e) {
+                        throw new ImageUploadException("Failed to upload image: " + file.getOriginalFilename());
+                    }
+                }
+            }
+        }
+
+        StepEntity updated = stepRepository.save(stepEntity);
+        return StepDTO.fromEntity(updated);
     }
+
 
     @Override
     @Transactional

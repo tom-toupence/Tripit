@@ -14,5 +14,7 @@ public interface ImageService {
 
     void deleteFile(String key);
 
+    boolean fileExists(String key);
+
 }
 

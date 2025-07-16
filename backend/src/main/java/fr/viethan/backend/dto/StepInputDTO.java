@@ -22,6 +22,7 @@ public class StepInputDTO {
     private double longitude;
     private LocalDate date;
     private Long tripId;
+    private List<Long> existingImageIds = new ArrayList<>();
     private List<MultipartFile> images = new ArrayList<>();
 
     public static StepDTO fromEntity(StepEntity step) {

@@ -35,14 +35,8 @@ public class StepEntity {
     @JoinColumn(name = "trip_id", nullable = false)
     private TripEntity trip;
 
-    public void addImage(ImageEntity img) {
-        images.add(img);
-        img.setStep(this);
+    public void addImage(ImageEntity image) {
+        images.add(image);
+        image.setStep(this);
     }
-    public void removeImage(ImageEntity img) {
-        images.remove(img);
-        img.setStep(null);
-    }
-
-
 }

@@ -37,9 +37,6 @@ public class ImageServiceImpl implements ImageService {
             throw new IllegalArgumentException("Le fichier ne peut pas être vide");
         }
 
-        System.out.println("Uploading image to R2/S3 with key: " + key);
-
-
         String detectedType = file.getContentType();
         String filename = file.getOriginalFilename();
 
@@ -49,10 +46,6 @@ public class ImageServiceImpl implements ImageService {
         if (filename != null && filename.endsWith(".png")) {
             detectedType = "image/png";
         }
-        System.out.println("Final content-type sent: " + detectedType);
-
-
-        // 1. Upload sur R2/S3
         try {
             s3Client.putObject(
                     PutObjectRequest.builder()
@@ -67,12 +60,10 @@ public class ImageServiceImpl implements ImageService {
             System.err.println("AWS error code: " + e.awsErrorDetails().errorCode());
             throw e;
         }
-
-
-        System.out.println("Image uploaded successfully to R2/S3 with key: " + key);
         ImageEntity img = new ImageEntity();
-        img.setKey(key);
-        return imageRepository.save(img);
+        img.setObjectKey(key);
+        img.setFilename(file.getOriginalFilename());
+        return img;
     }
 
     // 2. Download d'une image
@@ -91,5 +82,19 @@ public class ImageServiceImpl implements ImageService {
                 .key(key)
                 .build();
         s3Client.deleteObject(deleteObjectRequest);
+    }
+
+    @Override
+    public boolean fileExists(String key) {
+        HeadObjectRequest headObjectRequest = HeadObjectRequest.builder()
+                .bucket(bucketName)
+                .key(key)
+                .build();
+        try {
+            s3Client.headObject(headObjectRequest);
+            return true; // Le fichier existe
+        } catch (NoSuchKeyException e) {
+            return false; // Le fichier n'existe pas
+        }
     }
 }

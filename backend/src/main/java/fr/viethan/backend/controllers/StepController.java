@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -49,25 +50,35 @@ public class StepController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<StepDTO> updateStep(@PathVariable Long id, @RequestBody StepInputDTO stepInputDTO) {
+    public ResponseEntity<StepDTO> updateStep(
+            @PathVariable Long id,
+            @ModelAttribute StepInputDTO stepInputDTO,
+            @RequestParam(value = "file", required = false) List<MultipartFile> files,
+            @RequestParam(value = "existingImageIds", required = false) List<Long> existingImageIds) {
         try {
+            if (files != null) {
+                stepInputDTO.setImages(files);
+            }
+            if (existingImageIds != null) {
+                stepInputDTO.setExistingImageIds(existingImageIds);
+            }
             StepDTO updatedStep = stepService.updateStep(id, stepInputDTO);
             return ResponseEntity.ok(updatedStep);
         } catch (StepNotFoundException e) {
-            return ResponseEntity.notFound().build(); // 404 Not Found
+            return ResponseEntity.notFound().build();
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // 500 Internal Server Error
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
     @PostMapping("/{tripId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<StepDTO> createStep(@PathVariable Long tripId, @RequestBody StepInputDTO stepInputDTO) {
+    public ResponseEntity<StepDTO> createStep(@PathVariable Long tripId, @ModelAttribute StepInputDTO inputDTO, @RequestParam("file") List<MultipartFile> files) {
         try {
-            StepDTO createdStep = stepService.createStep(tripId, stepInputDTO);
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdStep);
+            inputDTO.setImages(files);
+            StepDTO created = stepService.createStep(tripId, inputDTO);
+            return ResponseEntity.status(HttpStatus.CREATED).body(created);
         } catch (TripNotFoundException e) {
-
             return ResponseEntity.notFound().build();
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();

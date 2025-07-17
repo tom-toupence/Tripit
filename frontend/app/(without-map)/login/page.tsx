@@ -10,7 +10,6 @@ export default function LoginRedirect() {
         // Vérifie si un JWT existe
         if (typeof window !== "undefined" && localStorage.getItem("jwt")) {
             setAlreadyLogged(true);
-            // Petit délai pour laisser voir le message
             setTimeout(() => {
                 router.replace("/");
             }, 1300);

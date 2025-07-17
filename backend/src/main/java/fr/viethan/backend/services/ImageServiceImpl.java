@@ -1,7 +1,9 @@
 package fr.viethan.backend.services;
 
 
+import fr.viethan.backend.entities.ImageEntity;
 import fr.viethan.backend.interfaces.ImageService;
+import fr.viethan.backend.repositories.ImageRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -16,30 +18,52 @@ import java.io.IOException;
 public class ImageServiceImpl implements ImageService {
 
 
+    private final ImageRepository imageRepository;
     private final S3Client s3Client;
     private final String bucketName;
 
-    public ImageServiceImpl(S3Client s3Client,
-                        @Value("${cloudflare.r2.bucket}") String bucketName) {
+    public ImageServiceImpl(ImageRepository imageRepository, S3Client s3Client,
+                            @Value("${cloudflare.r2.bucket}") String bucketName) {
+        this.imageRepository = imageRepository;
         this.s3Client = s3Client;
         this.bucketName = bucketName;
     }
 
     // 1. Upload d'une image
-    public void uploadFile(MultipartFile file, String key) throws IOException {
+    @Override
+    public ImageEntity uploadFile(MultipartFile file, String key) throws IOException {
         if (file.isEmpty()) {
+            System.out.println("Le fichier ne peut pas être vide");
             throw new IllegalArgumentException("Le fichier ne peut pas être vide");
         }
-        System.out.println("Uploading file: " + key + " to bucket: " + bucketName);
-        System.out.println("File size: " + file.getSize() + " bytes");
-        s3Client.putObject(
-                PutObjectRequest.builder()
-                        .bucket(bucketName)
-                        .key(key)
-                        .contentType(file.getContentType())
-                        .build(),
-                RequestBody.fromInputStream(file.getInputStream(), file.getSize())
-        );
+
+        String detectedType = file.getContentType();
+        String filename = file.getOriginalFilename();
+
+        if (filename != null && (filename.endsWith(".jpg") || filename.endsWith(".jpeg"))) {
+            detectedType = "image/jpeg";
+        }
+        if (filename != null && filename.endsWith(".png")) {
+            detectedType = "image/png";
+        }
+        try {
+            s3Client.putObject(
+                    PutObjectRequest.builder()
+                            .bucket(bucketName)
+                            .key(key)
+                            .contentType(detectedType)
+                            .build(),
+                    RequestBody.fromInputStream(file.getInputStream(), file.getSize())
+            );
+
+        } catch (S3Exception e) {
+            System.err.println("AWS error code: " + e.awsErrorDetails().errorCode());
+            throw e;
+        }
+        ImageEntity img = new ImageEntity();
+        img.setObjectKey(key);
+        img.setFilename(file.getOriginalFilename());
+        return img;
     }
 
     // 2. Download d'une image
@@ -58,5 +82,19 @@ public class ImageServiceImpl implements ImageService {
                 .key(key)
                 .build();
         s3Client.deleteObject(deleteObjectRequest);
+    }
+
+    @Override
+    public boolean fileExists(String key) {
+        HeadObjectRequest headObjectRequest = HeadObjectRequest.builder()
+                .bucket(bucketName)
+                .key(key)
+                .build();
+        try {
+            s3Client.headObject(headObjectRequest);
+            return true; // Le fichier existe
+        } catch (NoSuchKeyException e) {
+            return false; // Le fichier n'existe pas
+        }
     }
 }

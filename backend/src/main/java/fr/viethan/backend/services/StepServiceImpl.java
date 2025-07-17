@@ -192,7 +192,12 @@ public class StepServiceImpl implements StepService {
         StepEntity stepEntity = stepRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Step not found with id: " + id));
         for (ImageEntity img : stepEntity.getImages()) {
-            imageService.deleteFile(img.getObjectKey());
+            try {
+                imageService.deleteFile(img.getObjectKey());
+            } catch (Exception e) {
+                // Log the exception and continue execution
+                System.err.println("Failed to delete file with object key: " + img.getObjectKey() + ". Error: " + e.getMessage());
+            }
         }
         stepRepository.delete(stepEntity);
     }

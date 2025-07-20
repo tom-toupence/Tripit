@@ -1,5 +1,6 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Autocomplete } from "@react-google-maps/api";
 import NotificationToast from "@/components/NotificationToast";
 import ConfirmationModal from "@/components/ConfirmationModal";
 import { API_BASE_URL } from "@/lib/config";
@@ -8,7 +9,6 @@ interface Trip {
   id: number;
   country: string;
 }
-
 interface Step {
   id: number;
   description: string;
@@ -19,14 +19,8 @@ interface Step {
   images: {
     id: number;
     filename: string;
-    url?: string; // Optionnel : mets ici l'url Cloudflare R2/S3 si tu la stockes côté back
+    url?: string;
   }[];
-}
-
-interface Suggestion {
-  display_name: string;
-  lat: string;
-  lon: string;
 }
 
 export default function StepEditForm() {
@@ -40,28 +34,29 @@ export default function StepEditForm() {
   const [longitude, setLongitude] = useState(0);
   const [date, setDate] = useState("");
   const [address, setAddress] = useState("");
-  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [addressLoading, setAddressLoading] = useState(false);
 
-  // Gestion des images
+  // Images
   const [existingImages, setExistingImages] = useState<Step["images"]>([]);
   const [imagesToRemove, setImagesToRemove] = useState<number[]>([]);
   const [newImages, setNewImages] = useState<File[]>([]);
   const [newImagePreviews, setNewImagePreviews] = useState<string[]>([]);
 
-  // Notification et modal
+  // Notifications & Modal
   const [notifVisible, setNotifVisible] = useState(false);
   const [notifType, setNotifType] = useState<"success" | "error">("success");
   const [notifMsg, setNotifMsg] = useState("");
   const [showModal, setShowModal] = useState(false);
 
-  // Load trips on mount
+  // Autocomplete ref
+  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
+
   useEffect(() => {
     fetch(API_BASE_URL + "/trips")
         .then((res) => res.json())
         .then(setTrips);
   }, []);
 
-  // Load steps when tripId changes
   useEffect(() => {
     if (!tripId) return;
     fetch(API_BASE_URL + `/steps/trips/${tripId}/steps`)
@@ -74,7 +69,6 @@ export default function StepEditForm() {
     setNewImagePreviews([]);
   }, [tripId]);
 
-  // Load step data when selectedStepId changes
   useEffect(() => {
     const step = steps.find((s) => s.id === selectedStepId);
     if (step) {
@@ -86,44 +80,59 @@ export default function StepEditForm() {
       setImagesToRemove([]);
       setNewImages([]);
       setNewImagePreviews([]);
-      fetch(
-          `https://nominatim.openstreetmap.org/reverse?lat=${step.latitude}&lon=${step.longitude}&format=json`
-      )
-          .then((res) => res.json())
-          .then((data) => setAddress(data.display_name || ""));
+
+      // Reverse-geocode pour afficher l'adresse humaine
+      setAddress("");           // On vide pendant le chargement
+      setAddressLoading(true);
+
+      // Utiliser Geocoder côté client
+      if (window.google && window.google.maps) {
+        const geocoder = new window.google.maps.Geocoder();
+        const latlng = { lat: step.latitude, lng: step.longitude };
+
+        geocoder.geocode({ location: latlng }, (results, status) => {
+          if (status === "OK" && results && results.length > 0) {
+            setAddress(results[0].formatted_address);
+          } else if (status !== "OK") {
+            setAddress("Adresse non trouvée (erreur Google: " + status + ")");
+          } else {
+            setAddress("Adresse non trouvée");
+          }
+          setAddressLoading(false);
+        });
+      } else {
+        setAddressLoading(false);
+        setAddress("Google Maps non chargé");
+        console.warn("Google Maps JS SDK n'est pas chargé !");
+      }
     }
   }, [selectedStepId, steps]);
 
-  // Preview new images
   const handleNewImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     setNewImages(files);
     setNewImagePreviews(files.map((f) => URL.createObjectURL(f)));
   };
 
-  // Remove an existing image from the list
   const handleRemoveExistingImage = (imageId: number) => {
     setImagesToRemove([...imagesToRemove, imageId]);
   };
 
-  // Address suggestion search
-  const handleSearch = async (query: string) => {
-    setAddress(query);
-    if (query.length < 3) return;
-    const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
-            query
-        )}&format=json&limit=5`
-    );
-    const data = await res.json();
-    setSuggestions(data);
-  };
-
-  const handleSelectSuggestion = (s: Suggestion) => {
-    setAddress(s.display_name);
-    setLatitude(parseFloat(s.lat));
-    setLongitude(parseFloat(s.lon));
-    setSuggestions([]);
+  // ---- AUTOCOMPLETE GOOGLE ----
+  const handlePlaceChanged = () => {
+    const autocomplete = autocompleteRef.current;
+    if (!autocomplete) return;
+    const place = autocomplete.getPlace();
+    if (
+        place &&
+        place.formatted_address &&
+        place.geometry &&
+        place.geometry.location
+    ) {
+      setAddress(place.formatted_address);
+      setLatitude(place.geometry.location.lat());
+      setLongitude(place.geometry.location.lng());
+    }
   };
 
   // Confirmation modal before update
@@ -152,8 +161,6 @@ export default function StepEditForm() {
     existingImageIds.forEach((id) =>
         formData.append("existingImageIds", String(id))
     );
-
-    // New images
     newImages.forEach((img) => formData.append("file", img));
 
     // Envoi PUT (multipart/form-data)
@@ -165,7 +172,6 @@ export default function StepEditForm() {
     if (response.ok) {
       setNotifType("success");
       setNotifMsg("Étape modifiée avec succès !");
-      // Optionnel: reload steps/trip data
     } else {
       setNotifType("error");
       setNotifMsg("Erreur lors de la modification de l'étape.");
@@ -177,7 +183,6 @@ export default function StepEditForm() {
   return (
       <>
         <form onSubmit={handleSubmit} className="max-w-xl mx-auto mt-10 space-y-4">
-
           <h2 className="text-2xl font-bold mb-4 text-center">Modifier une étape</h2>
 
           {/* Sélecteur de voyage */}
@@ -246,7 +251,7 @@ export default function StepEditForm() {
                     {existingImages.filter(img => !imagesToRemove.includes(img.id)).map((img) => (
                         <div key={img.id} className="relative group">
                           <img
-                              src={img.url || `/api/images/${img.id}`} // adapte selon ton backend pour l'URL
+                              src={img.url || `/api/images/${img.id}`}
                               alt={img.filename}
                               className="w-20 h-20 object-cover rounded border"
                           />
@@ -285,27 +290,25 @@ export default function StepEditForm() {
                   </div>
                 </div>
 
+                {/* ----- AUTOCOMPLETE GOOGLE ----- */}
                 <div className="p-4 rounded-xl bg-white border border-gray-200 mb-4">
                   <label className="block mb-1 font-semibold">Adresse</label>
-                  <input
-                      type="text"
-                      className="input input-bordered w-full"
-                      placeholder="Adresse"
-                      value={address}
-                      onChange={(e) => handleSearch(e.target.value)}
-                  />
-                  {suggestions.length > 0 && (
-                      <ul className="bg-white shadow rounded mt-2">
-                        {suggestions.map((s, i) => (
-                            <li
-                                key={i}
-                                className="p-2 cursor-pointer hover:bg-green-100"
-                                onClick={() => handleSelectSuggestion(s)}
-                            >
-                              {s.display_name}
-                            </li>
-                        ))}
-                      </ul>
+                  <Autocomplete
+                      onLoad={autocomplete => (autocompleteRef.current = autocomplete)}
+                      onPlaceChanged={handlePlaceChanged}
+                  >
+                    <input
+                        type="text"
+                        className="input input-bordered w-full"
+                        placeholder="Adresse"
+                        value={address}
+                        onChange={(e) => setAddress(e.target.value)}
+                        disabled={addressLoading}
+                        autoComplete="off"
+                    />
+                  </Autocomplete>
+                  {addressLoading && (
+                      <div className="text-sm text-gray-400 mt-1">Chargement de l’adresse…</div>
                   )}
                 </div>
 

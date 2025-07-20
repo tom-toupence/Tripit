@@ -1,15 +1,7 @@
-'use client';
+import { GoogleMap, Polyline } from '@react-google-maps/api';
+import { useRef, useEffect, useState, useMemo, useCallback } from 'react';
 
-import { GoogleMap, LoadScript, Polyline } from '@react-google-maps/api';
-import { useRef, useEffect, useState, useMemo } from 'react';
-
-const containerStyle = {
-    width: '100%',
-    height: '100%',
-    display: 'flex',
-};
-
-// Vue initiale centrée sur (20,30)
+const containerStyle = { width: '100%', height: '100%', display: 'flex' };
 const center = { lat: 20, lng: 30 };
 const initialZoom = 1;
 const focusZoom = 7;
@@ -30,23 +22,6 @@ const ELLIPSE_CX       = 24;
 const ELLIPSE_CY       = 50;
 const scale = PIN_PIXEL_WIDTH / VIEWBOX_WIDTH;
 
-// Icônes statique et animée
-function staticPin(): google.maps.Icon {
-    return {
-        url: STATIC_PIN_URL,
-        scaledSize: new window.google.maps.Size(PIN_PIXEL_WIDTH, PIN_PIXEL_HEIGHT),
-        anchor: new window.google.maps.Point(ELLIPSE_CX * scale, ELLIPSE_CY * scale),
-    };
-}
-function animatedPin(): google.maps.Icon {
-    return {
-        url: ANIMATED_PIN_URL,
-        scaledSize: new window.google.maps.Size(PIN_PIXEL_WIDTH, PIN_PIXEL_HEIGHT),
-        anchor: new window.google.maps.Point(ELLIPSE_CX * scale, ELLIPSE_CY * scale),
-    };
-}
-
-// Cas où lat/lng seraient inversés
 function normalizeCoords(lat: number, lng: number) {
     if (lat > 90 || lat < -90) {
         return { lat: lng, lng: lat };
@@ -54,60 +29,52 @@ function normalizeCoords(lat: number, lng: number) {
     return { lat, lng };
 }
 
-// Petite animation de pan
-function animateToLocation(
-    map: google.maps.Map,
-    target: { lat: number; lng: number }
-) {
-    const frames = 60;
-    const start = map.getCenter()!;
-    const startLat = start.lat();
-    const startLng = start.lng();
-    const dLat = (target.lat - startLat) / frames;
-    const dLng = (target.lng - startLng) / frames;
+function Map() {
+    // ⚠️ Typage any sinon bug SSR/hydratation Next.js
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const mapRef = useRef<any>(null);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const markersRef = useRef<any[]>([]);
+    const [pathCoordinates, setPathCoordinates] = useState<{ lat: number; lng: number }[]>([]);
+    const [googleLoaded, setGoogleLoaded] = useState(false);
 
-    map.setZoom(focusZoom);
-
-    let i = 0;
-    const iv = window.setInterval(() => {
-        i++;
-        map.panTo({
-            lat: startLat + dLat * i,
-            lng: startLng + dLng * i,
-        });
-        if (i >= frames) window.clearInterval(iv);
-    }, 16);
-}
-
-export default function Map() {
-    const mapRef = useRef<google.maps.Map | null>(null);
-    const markersRef = useRef<google.maps.Marker[]>([]);
-    const [pathCoordinates, setPathCoordinates] = useState<
-        { lat: number; lng: number }[]
-    >([]);
-
-    // Memo des options pour ne pas les recréer à chaque render
-    const mapOptions = useMemo<google.maps.MapOptions>(
-        () => ({
-            center,
-            zoom: initialZoom,
-            gestureHandling: 'greedy',
-            disableDefaultUI: true,
-            minZoom: 3,
-            restriction: {
-                latLngBounds: {
-                    north:  85,
-                    south: -85,
-                    west:  -169,
-                    east:   190,
-                },
-                strictBounds: false,
+    // Pas de typage google.maps ici !
+    const mapOptions = useMemo(() => ({
+        center,
+        zoom: initialZoom,
+        gestureHandling: 'greedy',
+        disableDefaultUI: true,
+        minZoom: 3,
+        restriction: {
+            latLngBounds: {
+                north: 85,
+                south: -85,
+                west: -169,
+                east: 190,
             },
-        }),
-        []
-    );
+            strictBounds: false,
+        },
+    }), []);
 
-    // 1) Effacer markers + polyline
+    // Icons: safe to call ONLY when googleLoaded === true
+    const staticPin = useCallback(() => {
+        if (!googleLoaded || !window.google?.maps) return undefined;
+        return {
+            url: STATIC_PIN_URL,
+            scaledSize: new window.google.maps.Size(PIN_PIXEL_WIDTH, PIN_PIXEL_HEIGHT),
+            anchor: new window.google.maps.Point(ELLIPSE_CX * scale, ELLIPSE_CY * scale),
+        };
+    }, [googleLoaded]);
+
+    const animatedPin = useCallback(() => {
+        if (!googleLoaded || !window.google?.maps) return undefined;
+        return {
+            url: ANIMATED_PIN_URL,
+            scaledSize: new window.google.maps.Size(PIN_PIXEL_WIDTH, PIN_PIXEL_HEIGHT),
+            anchor: new window.google.maps.Point(ELLIPSE_CX * scale, ELLIPSE_CY * scale),
+        };
+    }, [googleLoaded]);
+
     useEffect(() => {
         const clearMap = () => {
             markersRef.current.forEach((m) => m.setMap(null));
@@ -118,14 +85,15 @@ export default function Map() {
         return () => window.removeEventListener('showMarkers', clearMap);
     }, []);
 
-    // 2) On récupère l'instance map
-    const onLoad = (map: google.maps.Map) => {
+    // On ne typE PAS map en google.maps.Map ici, c'est fourni par @react-google-maps/api
+    const onLoad = (map: any) => {
         mapRef.current = map;
-        // pas besoin de map.setCenter/zoom ici, c'est déjà dans mapOptions
+        setGoogleLoaded(true);
     };
 
-    // 3) À chaque focusOnStep : marker animé, polyline, pan/téléport
     useEffect(() => {
+        if (!googleLoaded) return;
+
         const handleFocus = (e: Event) => {
             const step = (e as CustomEvent<Step>).detail;
             const map = mapRef.current;
@@ -133,15 +101,19 @@ export default function Map() {
 
             const { lat, lng } = normalizeCoords(step.latitude, step.longitude);
 
-            // anciens markers deviennent statiques
-            markersRef.current.forEach((m) => m.setIcon(staticPin()));
+            markersRef.current.forEach((m) => {
+                const icon = staticPin();
+                if (icon) m.setIcon(icon);
+            });
 
-            // nouveau marker animé
+            const icon = animatedPin();
+            if (!icon) return;
+
             const marker = new window.google.maps.Marker({
                 position: { lat, lng },
                 map,
                 title: step.locationName,
-                icon: animatedPin(),
+                icon: icon,
                 zIndex: 999,
             });
             const infoWindow = new window.google.maps.InfoWindow({
@@ -150,14 +122,30 @@ export default function Map() {
             marker.addListener('click', () => infoWindow.open(map, marker));
             markersRef.current.push(marker);
 
-            // on étend la polyline
             setPathCoordinates((prev) => [...prev, { lat, lng }]);
 
             if (markersRef.current.length === 1) {
                 map.setZoom(focusZoom);
                 map.setCenter({ lat, lng });
             } else {
-                animateToLocation(map, { lat, lng });
+                // Petite animation de pan
+                const frames = 60;
+                const start = map.getCenter()!;
+                const startLat = start.lat();
+                const startLng = start.lng();
+                const dLat = (lat - startLat) / frames;
+                const dLng = (lng - startLng) / frames;
+                map.setZoom(focusZoom);
+
+                let i = 0;
+                const iv = window.setInterval(() => {
+                    i++;
+                    map.panTo({
+                        lat: startLat + dLat * i,
+                        lng: startLng + dLng * i,
+                    });
+                    if (i >= frames) window.clearInterval(iv);
+                }, 16);
             }
         };
 
@@ -167,24 +155,24 @@ export default function Map() {
             markersRef.current.forEach((m) => m.setMap(null));
             markersRef.current = [];
         };
-    }, []);
+    }, [googleLoaded, staticPin, animatedPin]);
 
     return (
-        <LoadScript googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!}>
-            <GoogleMap
-                mapContainerStyle={containerStyle}
-                onLoad={onLoad}
-                options={mapOptions}
-            >
-                <Polyline
-                    path={pathCoordinates}
-                    options={{
-                        strokeColor: '#FF0000',
-                        strokeOpacity: 0.8,
-                        strokeWeight: 2,
-                    }}
-                />
-            </GoogleMap>
-        </LoadScript>
+        <GoogleMap
+            mapContainerStyle={containerStyle}
+            onLoad={onLoad}
+            options={mapOptions}
+        >
+            <Polyline
+                path={pathCoordinates}
+                options={{
+                    strokeColor: '#FF0000',
+                    strokeOpacity: 0.8,
+                    strokeWeight: 2,
+                }}
+            />
+        </GoogleMap>
     );
 }
+
+export default Map;

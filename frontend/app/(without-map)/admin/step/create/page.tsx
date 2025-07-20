@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import NotificationToast from "@/components/NotificationToast";
 import { API_BASE_URL } from "@/lib/config";
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 
 interface Trip {
   id: number;

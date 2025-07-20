@@ -41,7 +41,11 @@ const NavLinks = ({ onClick }: { onClick?: () => void }) => {
           style={{ WebkitBackdropFilter: "blur(6px)", backdropFilter: "blur(6px)" }}
       >
         {itemsToShow.map(({ path, label }) => {
-          const isActive = pathname === path;
+          const isActive =
+              path === "/admin"
+                  ? pathname === "/admin" || pathname.startsWith("/admin/")
+                  : pathname === path;
+
           return (
               <button
                   key={path}

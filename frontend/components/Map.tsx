@@ -1,6 +1,6 @@
 'use client';
 
-import { GoogleMap, LoadScript, Polyline } from '@react-google-maps/api';
+import { GoogleMap, Polyline } from '@react-google-maps/api';
 import { useRef, useEffect, useState, useMemo } from 'react';
 
 const containerStyle = {
@@ -170,21 +170,19 @@ export default function Map() {
     }, []);
 
     return (
-        <LoadScript googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!}>
-            <GoogleMap
-                mapContainerStyle={containerStyle}
-                onLoad={onLoad}
-                options={mapOptions}
-            >
-                <Polyline
-                    path={pathCoordinates}
-                    options={{
-                        strokeColor: '#FF0000',
-                        strokeOpacity: 0.8,
-                        strokeWeight: 2,
-                    }}
-                />
-            </GoogleMap>
-        </LoadScript>
+        <GoogleMap
+            mapContainerStyle={containerStyle}
+            onLoad={onLoad}
+            options={mapOptions}
+        >
+            <Polyline
+                path={pathCoordinates}
+                options={{
+                    strokeColor: '#FF0000',
+                    strokeOpacity: 0.8,
+                    strokeWeight: 2,
+                }}
+            />
+        </GoogleMap>
     );
 }

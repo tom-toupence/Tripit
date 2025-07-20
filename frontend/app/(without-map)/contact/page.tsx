@@ -115,14 +115,14 @@ export default function Contact() {
                         className="flex items-center gap-2 mb-1 text-green-700"
                     >
                         <User className="w-5 h-5 text-green-500" />
-                        Nom et Prénom
+                        Nom
                     </label>
                     <input
                         type="text"
                         id="formName"
                         name="name"
                         className="w-full px-4 py-2 rounded-lg border border-green-200 focus:ring-2 focus:ring-green-300 focus:outline-none placeholder:text-green-400"
-                        placeholder="Votre nom et prénom"
+                        placeholder="Votre nom"
                         value={form.name}
                         onChange={handleChange}
                         required

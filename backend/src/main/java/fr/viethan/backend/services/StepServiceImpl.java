@@ -100,6 +100,9 @@ public class StepServiceImpl implements StepService {
         stepEntity.setTrip(trip);
         StepEntity saved = stepRepository.save(stepEntity);
 
+        System.out.println("Step created with ID: " + saved.getId());
+        System.out.println(stepEntity.toString());
+
         List<ImageEntity> imgs = new ArrayList<>();
         for (MultipartFile file : inputDTO.getImages()) {
             if (file == null || file.isEmpty()) {

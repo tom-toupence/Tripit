@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 export default function NotificationToast({
   message,
@@ -11,25 +11,35 @@ export default function NotificationToast({
   isVisible: boolean;
   onClose: () => void;
 }) {
-  // Déclencher le timeout dès que isVisible passe à true
+  // Timer d'autoclose
   useEffect(() => {
     if (isVisible) {
       const timer = setTimeout(() => {
         onClose();
-      }, 5000); // 10 secondes
-
-      return () => clearTimeout(timer); // Nettoyage si composant démonte
+      }, 1500); // durée visible (ex: 1,5s)
+      return () => clearTimeout(timer);
     }
   }, [isVisible, onClose]);
 
-  if (!isVisible) return null;
+  // Réf pour pointer le toast
+  const toastRef = useRef<HTMLDivElement>(null);
 
   return (
     <div
-      className={`rounded-xl px-6 py-4 text-white text-lg font-semibold shadow-lg transition-all duration-500
+      ref={toastRef}
+      // La transition est appliquée ici, sur le conteneur, grâce à la classe Tailwind
+      className={`
+        rounded-xl px-6 py-4 text-white text-lg font-semibold shadow-lg transition-opacity duration-500
         ${type === "success" ? "bg-green-500" : "bg-red-500"}
+        ${isVisible ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}
       `}
-      style={{ minWidth: "280px", maxWidth: "90vw", textAlign: "center" }}
+      style={{
+        minWidth: "280px",
+        maxWidth: "90vw",
+        textAlign: "center",
+      }}
+      // (facultatif) pour fermeture manuelle si besoin
+      // onClick={onClose}
     >
       {message}
     </div>

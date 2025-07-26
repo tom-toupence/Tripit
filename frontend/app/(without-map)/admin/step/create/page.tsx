@@ -1,18 +1,13 @@
-"use client";
-import { useEffect, useState } from "react";
+'use client';
+import { useEffect, useRef, useState } from "react";
+import { Autocomplete } from "@react-google-maps/api";
 import NotificationToast from "@/components/NotificationToast";
 import { API_BASE_URL } from "@/lib/config";
-import { Input } from "@/components/ui/input"
+import { Input } from "@/components/ui/input";
 
 interface Trip {
   id: number;
   country: string;
-}
-
-interface Suggestion {
-  display_name: string;
-  lat: string;
-  lon: string;
 }
 
 export default function StepCreateForm() {
@@ -21,7 +16,6 @@ export default function StepCreateForm() {
   const [description, setDescription] = useState("");
   const [date, setDate] = useState("");
   const [address, setAddress] = useState("");
-  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
 
@@ -30,7 +24,10 @@ export default function StepCreateForm() {
   const [notifMsg, setNotifMsg] = useState("");
   const [images, setImages] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [addressLoading, setAddressLoading] = useState(false);
 
+  // Google Autocomplete ref
+  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
 
   useEffect(() => {
     fetch(API_BASE_URL + "/trips")
@@ -38,29 +35,27 @@ export default function StepCreateForm() {
       .then(setTrips);
   }, []);
 
-  const handleSearch = async (query: string) => {
-    setAddress(query);
-    if (query.length < 3) return;
-    const res = await fetch(
-      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
-        query
-      )}&format=json&limit=5`
-    );
-    const data = await res.json();
-    setSuggestions(data);
-  };
-
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleNewImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     setImages(files);
-    setImagePreviews(files.map(f => URL.createObjectURL(f)));
+    setImagePreviews(files.map((f) => URL.createObjectURL(f)));
   };
 
-  const handleSelectSuggestion = (s: Suggestion) => {
-    setAddress(s.display_name);
-    setLatitude(parseFloat(s.lat));
-    setLongitude(parseFloat(s.lon));
-    setSuggestions([]);
+  // ----- AUTOCOMPLETE GOOGLE -----
+  const handlePlaceChanged = () => {
+    const autocomplete = autocompleteRef.current;
+    if (!autocomplete) return;
+    const place = autocomplete.getPlace();
+    if (
+      place &&
+      place.formatted_address &&
+      place.geometry &&
+      place.geometry.location
+    ) {
+      setAddress(place.formatted_address);
+      setLatitude(place.geometry.location.lat());
+      setLongitude(place.geometry.location.lng());
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -73,11 +68,12 @@ export default function StepCreateForm() {
     formData.append("longitude", String(longitude));
     formData.append("date", date);
     formData.append("tripId", String(tripId));
-    images.forEach((img) => formData.append("file", img)); // "file" correspond au backend
+    images.forEach((img) => formData.append("file", img));
 
     const response = await fetch(API_BASE_URL + `/steps/${tripId}`, {
       method: "POST",
       body: formData,
+      credentials: "include",
     });
 
     if (response.ok) {
@@ -136,7 +132,7 @@ export default function StepCreateForm() {
                   type="file"
                   multiple
                   accept="image/*"
-                  onChange={handleImageChange}
+                  onChange={handleNewImageChange}
               />
               <div className="flex flex-wrap gap-2 mt-2">
                 {imagePreviews.map((src, idx) => (
@@ -150,27 +146,24 @@ export default function StepCreateForm() {
               </div>
             </div>
 
-            <div>
-              <input
-                type="text"
-                className="input input-bordered w-full"
-                placeholder="Adresse"
-                value={address}
-                onChange={(e) => handleSearch(e.target.value)}
-              />
-              {suggestions.length > 0 && (
-                <ul className="bg-white shadow rounded mt-2">
-                  {suggestions.map((s, i) => (
-                    <li
-                      key={i}
-                      className="p-2 cursor-pointer hover:bg-green-100"
-                      onClick={() => handleSelectSuggestion(s)}
-                    >
-                      {s.display_name}
-                    </li>
-                  ))}
-                </ul>
-              )}
+            {/* Autocomplete Google */}
+            <div className="mb-2">
+              <label className="block mb-1 font-semibold">Adresse</label>
+              <Autocomplete
+                onLoad={autocomplete => (autocompleteRef.current = autocomplete)}
+                onPlaceChanged={handlePlaceChanged}
+              >
+                <input
+                  type="text"
+                  className="input input-bordered w-full"
+                  placeholder="Adresse"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  disabled={addressLoading}
+                  autoComplete="off"
+                  required
+                />
+              </Autocomplete>
             </div>
 
             <input

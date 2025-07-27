@@ -76,7 +76,7 @@ function animateToLocation(
             lng: startLng + dLng * i,
         });
         if (i >= frames) window.clearInterval(iv);
-    }, 16);
+    }, 24);
 }
 
 export default function Map() {

@@ -51,7 +51,10 @@ export default function TripBox() {
     fetch(`${API_BASE_URL}/trips/${selectedTrip.id}`)
         .then((res) => res.json())
         .then((data: { steps: Step[] }) => {
-          const steps = data.steps || [];
+          const steps = (data.steps || []).slice().sort(
+              (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+         );
+          console.log("Steps for trip:", steps);
           if (steps.length > 0) {
             window.dispatchEvent(
                 new CustomEvent("focusOnStep", { detail: steps[0] })

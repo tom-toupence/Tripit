@@ -73,7 +73,7 @@ public class StepController {
 
     @PostMapping("/{tripId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<StepDTO> createStep(@PathVariable Long tripId, @ModelAttribute StepInputDTO inputDTO, @RequestParam("file") List<MultipartFile> files) {
+    public ResponseEntity<StepDTO> createStep(@PathVariable Long tripId, @ModelAttribute StepInputDTO inputDTO, @RequestParam(value = "file", required = false) List<MultipartFile> files) {
         try {
             inputDTO.setImages(files);
             StepDTO created = stepService.createStep(tripId, inputDTO);

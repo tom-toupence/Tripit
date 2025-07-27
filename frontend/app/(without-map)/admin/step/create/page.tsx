@@ -70,6 +70,15 @@ export default function StepCreateForm() {
     formData.append("tripId", String(tripId));
     images.forEach((img) => formData.append("file", img));
 
+    console.log("Submitting step with data:", {
+      description,
+      latitude,
+      longitude,
+      date,
+      tripId,
+      images,
+    });
+
     const response = await fetch(API_BASE_URL + `/steps/${tripId}`, {
       method: "POST",
       body: formData,

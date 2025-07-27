@@ -35,8 +35,17 @@ public class StepEntity {
     @JoinColumn(name = "trip_id", nullable = false)
     private TripEntity trip;
 
-    public void addImage(ImageEntity image) {
-        images.add(image);
-        image.setStep(this);
+    @Override
+    public String toString() {
+        return "StepEntity{" +
+                "id=" + id +
+                ", description='" + description + '\'' +
+                ", latitude=" + latitude +
+                ", longitude=" + longitude +
+                ", date=" + date +
+                // Surtout pas trip + "..." car ça rappelle TripEntity.toString()
+                (trip != null ? ", tripId=" + trip.getId() : "") +
+                '}';
     }
+
 }

@@ -24,6 +24,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import org.springframework.http.HttpHeaders;
+import software.amazon.awssdk.awscore.util.SignerOverrideUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -101,10 +102,12 @@ public class StepServiceImpl implements StepService {
         StepEntity saved = stepRepository.save(stepEntity);
 
         System.out.println("Step created with ID: " + saved.getId());
-        System.out.println(stepEntity.toString());
+        System.out.println(stepEntity);
 
         List<ImageEntity> imgs = new ArrayList<>();
-        for (MultipartFile file : inputDTO.getImages()) {
+        List<MultipartFile> inputImages = inputDTO.getImages();
+
+        if(inputImages != null && !inputImages.isEmpty()) {for (MultipartFile file : inputDTO.getImages()) {
             if (file == null || file.isEmpty()) {
                 continue;
             }
@@ -120,7 +123,8 @@ public class StepServiceImpl implements StepService {
             }
             img.setStep(saved);
             imgs.add(img);
-        }
+        }}
+
 
         saved.getImages().addAll(imgs);
         stepRepository.save(saved);
@@ -199,7 +203,7 @@ public class StepServiceImpl implements StepService {
                 imageService.deleteFile(img.getObjectKey());
             } catch (Exception e) {
                 // Log the exception and continue execution
-                System.err.println("Failed to delete file with object key: " + img.getObjectKey() + ". Error: " + e.getMessage());
+                System.out.println("Failed to delete file with object key: " + img.getObjectKey() + ". Error: " + e.getMessage());
             }
         }
         stepRepository.delete(stepEntity);
